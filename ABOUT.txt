@@ -1,0 +1,35 @@
+﻿========================================================================
+                       PROJECT INFORMATION CARD
+========================================================================
+Project Name : JA IQ5 Reflash
+App ID       : JA_IQ5_REFLASH
+Tech Stack   : Flutter 3.x / Dart 3.x (Windows Desktop x64)
+Engine       : Qualcomm EDL / fh_loader.exe / Sahara Protocol
+Managed By   : JA Auto Git
+Website      : https://jatechvn.github.io/
+------------------------------------------------------------------------
+Version      : v1.2.0
+Release Date : 2026-09-12
+Author       : JATech VN
+License      : MIT
+Platform     : Windows 10 / 11 (x64)
+------------------------------------------------------------------------
+Description  : Professional multi-device Qualcomm IQ5 firmware flashing
+               and recovery desktop tool. Supports simultaneous flashing
+               of up to 8 devices via EDL (USB 9008) with automated pipeline,
+               two-column layout, 3-slot ROM selector, rotating glow effects,
+               asymmetric bounce marquee path, and hardware tier profiling.
+========================================================================
+Key Features :
+  • Multi-Device Simultaneous EDL Flash (up to 8 COM ports)
+  • Two-Column Layout: Dedicated EDL (9008) & ADB/Fastboot monitoring columns
+  • Auto Flash Pipeline: Fastboot -> ADB -> EDL -> Flash -> Reboot
+  • 3 Smart Firmware Slots: Factory Stock, User Custom, Diag/Test with fast switch
+  • Rotating Glow Border: Dynamic animated comet beam for selected slot card
+  • Asymmetric Bounce Marquee Path: Smooth ping-pong marquee for long paths
+  • Hardware Tier Profiling: Ultra (120 FPS), Balanced (60 FPS), Lite (Zero-Lag)
+  • Fluent Glassmorphism: Frosted acrylic glass with 4-slider live tuning
+  • HMAC-SHA256 Hardware-Locked Licensing with LAN Server auto-sync
+  • Trilingual Interface: English, Tieng Viet, 中文 (live dynamic switch)
+  • Single-Instance Guard with silent window bring-to-front
+========================================================================
