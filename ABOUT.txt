@@ -1,4 +1,4 @@
-﻿========================================================================
+========================================================================
                        PROJECT INFORMATION CARD
 ========================================================================
 Project Name : JA IQ5 Reflash
@@ -8,7 +8,7 @@ Engine       : Qualcomm EDL / fh_loader.exe / Sahara Protocol
 Managed By   : JA Auto Git
 Website      : https://jatechvn.github.io/
 ------------------------------------------------------------------------
-Version      : v1.2.0
+Version      : v1.2.1
 Release Date : 2026-09-12
 Author       : JATech VN
 License      : MIT
@@ -28,8 +28,9 @@ Key Features :
   • Rotating Glow Border: Dynamic animated comet beam for selected slot card
   • Asymmetric Bounce Marquee Path: Smooth ping-pong marquee for long paths
   • Hardware Tier Profiling: Ultra (120 FPS), Balanced (60 FPS), Lite (Zero-Lag)
-  • Fluent Glassmorphism: Frosted acrylic glass with 4-slider live tuning
-  • HMAC-SHA256 Hardware-Locked Licensing with LAN Server auto-sync
+  • Real-time Bento Glassmorphism: Live blur (0-40px) & opacity (5-100%) tuning with cancel rollback
+  • Real-Time Bento Terminal: Multi-device high-contrast logging monitor
+  • Hardware-Locked Licensing: HMAC-SHA256 machine signature validation
   • Trilingual Interface: English, Tieng Viet, 中文 (live dynamic switch)
   • Single-Instance Guard with silent window bring-to-front
 ========================================================================

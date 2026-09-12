@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # ⚡ JA IQ5 Reflash
 
@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.2.0-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.2.1-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
@@ -105,9 +105,9 @@ Với quy trình 3 giai đoạn tự động (Fastboot → ADB → EDL → Flash
 ## ⚡ Hướng dẫn Khởi động Nhanh
 
 ### Cách A: Chạy bản Portable độc lập (Khuyên dùng)
-1. Tải gói phát hành JA_IQ5_Flash_v1.2.0_Windows_x64.zip từ mục [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases).
-2. Giải nén vào một thư mục bất kỳ (ví dụ: D:\Tools\JA_IQ5_Flash\).
-3. Chạy file ja_iq5_flash.exe.
+1. Tải gói phát hành `JA_IQ5_Flash_v1.2.1_Windows_x64.zip` từ mục [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases).
+2. Giải nén vào một thư mục bất kỳ (ví dụ: `D:\Tools\JA_IQ5_Flash\`).
+3. Chạy file `ja_iq5_flash.exe`.
 4. Đảm bảo máy tính Windows đã cài đặt đầy đủ driver Qualcomm QDLoader 9008 và driver USB Android.
 
 ### Cách B: Biên dịch từ Mã nguồn
@@ -116,7 +116,7 @@ Yêu cầu môi trường:
 - Visual Studio 2022 với gói "Desktop development with C++"
 - Hệ điều hành Windows 10/11 x64
 
-`ash
+```bash
 # 1. Clone mã nguồn
 git clone https://github.com/jatechvn/JA_IQ5_Flash.git
 cd JA_IQ5_Flash
@@ -129,9 +129,9 @@ flutter test
 
 # 4. Đóng gói bản phát hành Release x64
 build.bat
-`
+```
 
-File thực thi và file nén zip đóng gói sẽ được tạo tự động trong thư mục dist/.
+File thực thi và file nén zip đóng gói sẽ được tạo tự động trong thư mục `dist/`.
 
 ---
 
@@ -139,6 +139,14 @@ File thực thi và file nén zip đóng gói sẽ được tạo tự động t
 
 Chi tiết lịch sử các phiên bản có tại [CHANGELOG.md](../CHANGELOG.md).
 
+- **v1.2.1 (12/09/2026)**:
+  - Cập nhật thời gian thực (real-time live preview) cho thanh trượt Bento Card Blur & Opacity chuẩn MES Tool.
+  - Tích hợp kiến trúc `ChangeNotifierProvider` toàn cục với `context.watch<AppTheme>()`.
+  - Tự động bỏ qua GPU `BackdropFilter` khi độ mờ là 0 px (Chế độ Lite tiết kiệm tài nguyên).
+  - Tỷ lệ trong suốt (opacity scaling) động và hài hòa cho các thẻ slot ROM và container.
+  - Cơ chế Rollback hoàn tác thông minh khi hủy bỏ cài đặt (Cancel) và lưu chuẩn xác vào `config.ini`.
+  - Bổ sung mục Hướng dẫn số 5 về Tinh chỉnh Kính Bento hỗ trợ 3 ngôn ngữ EN, VI, CN.
+  - Đạt 43/43 bài kiểm thử tự động (100% xanh).
 - **v1.2.0 (12/09/2026)**:
   - Bổ sung bố cục 2 cột độc lập chia riêng khu vực EDL 9008 và ADB/Fastboot.
   - Bộ 3 slot ROM thông minh với viền sáng xoay quanh (RotatingGlowBorder).

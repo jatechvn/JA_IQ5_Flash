@@ -13,7 +13,7 @@ cd /d "%WORKSPACE_DIR%"
 :: Read app version from pubspec.yaml so release naming never drifts out of sync
 for /f "tokens=2 delims= " %%v in ('findstr /b "version:" pubspec.yaml') do set PUBSPEC_VERSION=%%v
 for /f "tokens=1 delims=+" %%v in ("%PUBSPEC_VERSION%") do set APP_VERSION=%%v
-if "%APP_VERSION%"=="" set APP_VERSION=1.2.0
+if "%APP_VERSION%"=="" set APP_VERSION=1.2.1
 echo Detected app version: v%APP_VERSION%
 echo.
 

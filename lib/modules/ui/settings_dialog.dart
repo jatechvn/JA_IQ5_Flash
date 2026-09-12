@@ -878,6 +878,13 @@ class _SettingsUserGuideTab extends StatelessWidget {
             title: tr('guide_trouble_title'),
             desc: tr('guide_trouble_desc'),
           ),
+          const SizedBox(height: 8),
+          _buildCard(
+            icon: Icons.auto_awesome_rounded,
+            accent: colors.accentCyan,
+            title: tr('guide_glass_title'),
+            desc: tr('guide_glass_desc'),
+          ),
         ],
       ),
     );

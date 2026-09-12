@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # ⚡ JA IQ5 Reflash
 
@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.2.0-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.2.1-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
@@ -105,9 +105,9 @@
 ## ⚡ 快速入门指南
 
 ### 方式 A: 运行独立免安装包 (推荐)
-1. 从 [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases) 页面下载最新发布包 JA_IQ5_Flash_v1.2.0_Windows_x64.zip。
-2. 解压到任意本地目录（例如 D:\Tools\JA_IQ5_Flash\）。
-3. 双击运行 ja_iq5_flash.exe。
+1. 从 [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases) 页面下载最新发布包 `JA_IQ5_Flash_v1.2.1_Windows_x64.zip`。
+2. 解压到任意本地目录（例如 `D:\Tools\JA_IQ5_Flash\`）。
+3. 双击运行 `ja_iq5_flash.exe`。
 4. 确保 Windows 系统已正确安装高通 QDLoader 9008 驱动以及 Android USB 驱动。
 
 ### 方式 B: 从源码编译
@@ -116,7 +116,7 @@
 - Visual Studio 2022 并勾选“使用 C++ 的桌面开发”工作负载
 - Windows 10/11 x64 操作系统
 
-`ash
+```bash
 # 1. 克隆代码仓库
 git clone https://github.com/jatechvn/JA_IQ5_Flash.git
 cd JA_IQ5_Flash
@@ -129,9 +129,9 @@ flutter test
 
 # 4. 一键编译与打包 Release 版本
 build.bat
-`
+```
 
-编译出的独立可执行程序和打包 ZIP 文件将自动生成于 dist/ 目录下。
+编译出的独立可执行程序和打包 ZIP 文件将自动生成于 `dist/` 目录下。
 
 ---
 
@@ -139,6 +139,14 @@ build.bat
 
 完整历史记录请参阅 [CHANGELOG.md](../CHANGELOG.md)。
 
+- **v1.2.1 (2026-09-12)**:
+  - Bento 卡片模糊度与不透明度滑块实现实时无缝响应预览（遵循 MES Tool 架构标准）。
+  - 接入全局 `ChangeNotifierProvider` 架构，全面采用 `context.watch<AppTheme>()`。
+  - 模糊度为 0 px 时自动跳过 GPU `BackdropFilter` 渲染管线（低配 Lite 节能模式）。
+  - 为 ROM 插槽与双列容器提供智能动态半透明度比例缩放。
+  - 设置弹窗提供完备的取消回退（Cancel Rollback）及向 `config.ini` 持久化机制。
+  - 新增第 5 项 Bento 毛玻璃用户指南说明，支持英、越、中三语。
+  - 全套 43 项自动化单元与 UI 测试 100% 通过。
 - **v1.2.0 (2026-09-12)**:
   - 引入专用的独立双列布局，分别呈现 EDL 9008 与 ADB/Fastboot 设备队列。
   - 搭载 3 插槽固件选择器与全动态彗星流光外框 (RotatingGlowBorder)。

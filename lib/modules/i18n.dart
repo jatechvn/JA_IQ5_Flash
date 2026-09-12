@@ -982,6 +982,19 @@ const Map<String, Map<String, String>> _strings = {
     'CN':
         '点击立即扫描刷新COM端口。若设备卡在Fastboot，使用“启动到EDL”。终端监控支持一键复制日志。',
   },
+  'guide_glass_title': {
+    'EN': '5. Bento Glassmorphism & Performance Profiling',
+    'VI': '5. Hiệu ứng Kính Bento & Tối ưu Phần cứng',
+    'CN': '5. Bento玻璃拟态与硬件性能调校',
+  },
+  'guide_glass_desc': {
+    'EN':
+        'Live real-time adjustment for Bento Card Blur (0-40px) and Card Opacity (5-100%). Features automatic hardware tier profiling (Ultra, Balanced, Lite), instant preview rollback on cancellation, and ambient GPU-composited mesh orbs.',
+    'VI':
+        'Tùy chỉnh độ mờ (0-40px) và độ trong suốt (5-100%) thẻ Bento theo thời gian thực. Tự động nhận diện cấu hình máy (Ultra, Balanced, Lite), hoàn tác tức thì khi bấm Hủy/Đóng và hiệu ứng hạt dạ quang Mesh Orbs.',
+    'CN':
+        '实时调节Bento卡片模糊度（0-40px）与不透明度（5-100%）。支持硬件配置自动分级（Ultra/Balanced/Lite）、取消操作自动回滚预览及GPU合成流动光球。',
+  },
   'about_app_name': {
     'EN': 'JA IQ5 REFLASH TOOL',
     'VI': 'JA IQ5 REFLASH TOOL',

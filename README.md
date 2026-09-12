@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # ⚡ JA IQ5 Reflash
 
@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.2.0-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.2.1-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
@@ -113,7 +113,7 @@ JA_IQ5_Flash/
 │   └── *.dll                        # Required Windows runtime dynamic libraries
 ├── dist/                            # Packaged release folder (built via build.bat)
 │   ├── ja_iq5_flash.exe             # Standalone Windows x64 executable
-│   └── JA_IQ5_Flash_v1.2.0_Windows_x64.zip # Standalone parent-folder zip release
+│   └── JA_IQ5_Flash_v1.2.1_Windows_x64.zip # Standalone parent-folder zip release
 ├── lib/                             # Core Dart & Flutter application source code
 │   ├── modules/                     # Modular business logic & services
 │   │   ├── logic/                   # Device management, sessions & workers
@@ -154,41 +154,36 @@ JA_IQ5_Flash/
 ## ⚡ Quick Start Guide
 
 ### Option A: Portable Run (Recommended)
-1. Download the latest release package JA_IQ5_Flash_v1.2.0_Windows_x64.zip from [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases).
-2. Extract the ZIP package to any directory (e.g. D:\Tools\JA_IQ5_Flash\).
-3. Run ja_iq5_flash.exe.
+1. Download the latest release package `JA_IQ5_Flash_v1.2.1_Windows_x64.zip` from [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases).
+2. Extract the ZIP package to any directory (e.g. `D:\Tools\JA_IQ5_Flash\`).
+3. Run `ja_iq5_flash.exe`.
 4. Ensure your Qualcomm QDLoader 9008 drivers and Android USB drivers are installed on Windows.
 
 ### Option B: Building from Source
 Prerequisites:
 - Flutter SDK $\ge 3.22.0$ (Dart $\ge 3.4.0$)
 - Visual Studio 2022 with "Desktop development with C++"
-- Windows 10/11 x64
+- Git
 
-`ash
-# 1. Clone repository
+```bash
 git clone https://github.com/jatechvn/JA_IQ5_Flash.git
 cd JA_IQ5_Flash
-
-# 2. Fetch Flutter dependencies
 flutter pub get
+flutter run -d windows
+```
 
-# 3. Run automated tests
-flutter test
-
-# 4. Compile standalone Windows Release
+To compile a self-contained release zip:
+```cmd
 build.bat
-`
-
-The output executable and packaged ZIP will be placed in dist/.
+```
 
 ---
 
 ## ⚙️ Configuration & Settings
 
-Application settings and firmware paths are persisted in config.ini in the executable folder:
+Preferences are stored in `config.ini`:
 
-`ini
+```ini
 [APP]
 language = VI
 theme = dark
@@ -222,6 +217,14 @@ mesh_orb_opacity = 0.24
 
 See full release history and notes in [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.2.1 (2026-09-12)**:
+  - Real-time live responsiveness for Bento Card Blur & Opacity sliders (MES Tool Standard).
+  - Global `ChangeNotifierProvider` architecture with reactive `context.watch<AppTheme>()`.
+  - Automatic GPU `BackdropFilter` bypass when blur is 0 px (Lite mode).
+  - Proportional dynamic opacity scaling for slot cards and column containers.
+  - Safe cancellation rollback and persistence on Settings Dialog.
+  - Added 5th User Guide section for Bento Glassmorphism across EN, VI, CN.
+  - 43 passing automated unit & widget tests (100% green).
 - **v1.2.0 (2026-09-12)**:
   - Two-Column layout dividing EDL 9008 and ADB/Fastboot monitoring.
   - 3-slot ROM selector with rotating neon glow border (RotatingGlowBorder).
