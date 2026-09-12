@@ -101,6 +101,8 @@ class _DeviceCardState extends State<DeviceCard> {
 
         return BentoCard(
           colors: c,
+          blurSigma: t.cardBlur,
+          bgOpacity: t.cardOpacity,
           glowColor: glow,
           isFeatured: isBusy || status == FlashSession.statusSuccess,
           padding: const EdgeInsets.all(10),

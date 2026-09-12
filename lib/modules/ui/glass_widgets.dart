@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'app_colors.dart';
+import 'styles.dart';
 
 // ── Mesh Orb & Background ──────────────────────────────────────────────────
 
@@ -246,9 +248,21 @@ class BentoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBg = customBg ??
-        (bgOpacity != null
-            ? colors.cardBg.withValues(alpha: bgOpacity!)
+    AppTheme? theme;
+    try {
+      theme = context.watch<AppTheme>();
+    } catch (_) {}
+
+    final effectiveBlur = blurSigma ?? theme?.cardBlur ?? 20.0;
+    final effectiveOpacity = bgOpacity ?? theme?.cardOpacity;
+    final effectiveBg = customBg != null
+        ? (effectiveOpacity != null
+            ? customBg!.withValues(
+                alpha: (customBg!.a * (effectiveOpacity / 0.25)).clamp(0.04, 0.98),
+              )
+            : customBg!)
+        : (effectiveOpacity != null
+            ? colors.cardBg.withValues(alpha: effectiveOpacity)
             : colors.cardBg);
     final effectiveBorder =
         customBorder ??
@@ -306,7 +320,6 @@ class BentoCard extends StatelessWidget {
       ),
     );
 
-    final effectiveBlur = blurSigma ?? 20.0;
     if (effectiveBlur > 0) {
       content = BackdropFilter(
         filter: ImageFilter.blur(sigmaX: effectiveBlur, sigmaY: effectiveBlur),
@@ -536,6 +549,7 @@ class SubCard extends StatelessWidget {
   final double borderRadius;
   final Color? customBg;
   final Color? customBorder;
+  final double? bgOpacity;
 
   const SubCard({
     super.key,
@@ -545,14 +559,33 @@ class SubCard extends StatelessWidget {
     this.borderRadius = 10,
     this.customBg,
     this.customBorder,
+    this.bgOpacity,
   });
 
   @override
   Widget build(BuildContext context) {
+    AppTheme? theme;
+    try {
+      theme = context.watch<AppTheme>();
+    } catch (_) {}
+
+    final effectiveOpacity = bgOpacity ?? theme?.cardOpacity;
+    final effectiveBg = customBg != null
+        ? (effectiveOpacity != null
+            ? customBg!.withValues(
+                alpha: (customBg!.a * (effectiveOpacity / 0.25)).clamp(0.04, 0.98),
+              )
+            : customBg!)
+        : (effectiveOpacity != null
+            ? colors.subCardBg.withValues(
+                alpha: (colors.subCardBg.a * (effectiveOpacity / 0.25)).clamp(0.04, 0.98),
+              )
+            : colors.subCardBg);
+
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: customBg ?? colors.subCardBg,
+        color: effectiveBg,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(color: customBorder ?? colors.subCardBorder),
       ),

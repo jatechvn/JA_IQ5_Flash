@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:win32/win32.dart';
 
 import 'modules/constants.dart';
@@ -29,7 +30,12 @@ void main(List<String> args) async {
 
   final theme = AppTheme();
 
-  runApp(MyApp(theme: theme, initiallyLicensed: licensed));
+  runApp(
+    ChangeNotifierProvider.value(
+      value: theme,
+      child: MyApp(theme: theme, initiallyLicensed: licensed),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {

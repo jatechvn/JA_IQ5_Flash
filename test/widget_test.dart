@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:ja_iq5_flash/modules/i18n.dart';
 import 'package:ja_iq5_flash/modules/logic/firmware_slot.dart';
 import 'package:ja_iq5_flash/modules/ui/app_colors.dart';
@@ -795,6 +796,140 @@ void main() {
       expect(win10LightColors.orb2, equals(const Color(0xFFD8B4FE)));
       expect(win10LightColors.orb3, equals(const Color(0xFF67E8F9)));
       expect(win10LightColors.orbOpacity, lessThanOrEqualTo(0.16));
+    });
+  });
+
+  group('Live Glassmorphism Reactivity & Rollback Tests', () {
+    testWidgets('BentoCard reacts dynamically to AppTheme cardBlur and cardOpacity updates', (
+      tester,
+    ) async {
+      final theme = AppTheme();
+      theme.setLiveGlassmorphism(cardBlur: 15.0, cardOpacity: 0.30);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: theme,
+          child: MaterialApp(
+            home: Scaffold(
+              body: BentoCard(
+                colors: theme.colors,
+                child: const Text('Live Bento Content'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Live Bento Content'), findsOneWidget);
+
+      // Verify initial BackdropFilter with sigma 15
+      final filterFinder = find.byType(BackdropFilter);
+      expect(filterFinder, findsOneWidget);
+
+      // Update theme glassmorphism live (e.g. from slider)
+      theme.setLiveGlassmorphism(cardBlur: 32.0, cardOpacity: 0.60);
+      await tester.pump();
+
+      expect(find.byType(BackdropFilter), findsOneWidget);
+
+      // Set blur to 0 (e.g. Lite mode)
+      theme.setLiveGlassmorphism(cardBlur: 0.0);
+      await tester.pump();
+      expect(find.byType(BackdropFilter), findsNothing);
+    });
+
+    testWidgets('SettingsDialog cancellation rolls back glassmorphism and perfMode', (
+      tester,
+    ) async {
+      final theme = AppTheme();
+      theme.setLiveGlassmorphism(cardBlur: 20.0, cardOpacity: 0.25);
+      theme.setPerfTierMode(PerfTierMode.ultra);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: theme,
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () {
+                  showSettingsDialog(context: context, theme: theme);
+                },
+                child: const Text('Open Settings'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Settings'));
+      await tester.pumpAndSettle();
+
+      // Simulate user changing tier and fine-tuning sliders
+      theme.setPerfTierMode(PerfTierMode.lite);
+      theme.setLiveGlassmorphism(cardBlur: 35.0, cardOpacity: 0.80);
+      await tester.pump();
+
+      expect(theme.cardBlur, equals(35.0));
+      expect(theme.cardOpacity, equals(0.80));
+      expect(theme.perfMode, equals(PerfTierMode.lite));
+
+      // Click Close button without saving
+      final closeBtn = find.text(tr('action_close'));
+      expect(closeBtn, findsOneWidget);
+      await tester.tap(closeBtn);
+      await tester.pumpAndSettle();
+
+      // Verify theme values were rolled back
+      expect(theme.cardBlur, equals(20.0));
+      expect(theme.cardOpacity, equals(0.25));
+      expect(theme.perfMode, equals(PerfTierMode.ultra));
+    });
+
+    testWidgets('SettingsDialog save triggers onConfigSaved and keeps values', (
+      tester,
+    ) async {
+      final theme = AppTheme();
+      theme.setLiveGlassmorphism(cardBlur: 20.0, cardOpacity: 0.25);
+      bool configSaved = false;
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: theme,
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () {
+                  showSettingsDialog(
+                    context: context,
+                    theme: theme,
+                    onConfigSaved: () {
+                      configSaved = true;
+                    },
+                  );
+                },
+                child: const Text('Open Settings'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Settings'));
+      await tester.pumpAndSettle();
+
+      // Update values
+      theme.setLiveGlassmorphism(cardBlur: 28.0, cardOpacity: 0.45);
+      await tester.pump();
+
+      // Click Save Settings
+      final saveBtn = find.text(tr('action_save_settings'));
+      expect(saveBtn, findsOneWidget);
+      await tester.tap(saveBtn);
+      await tester.pumpAndSettle();
+
+      expect(configSaved, isTrue);
+      expect(theme.cardBlur, equals(28.0));
+      expect(theme.cardOpacity, equals(0.45));
     });
   });
 }

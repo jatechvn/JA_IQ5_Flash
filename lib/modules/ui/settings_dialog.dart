@@ -54,17 +54,47 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
   late bool _enableMeshOrbs;
   late double _meshOrbOpacity;
 
+  // Original tuning values for cancellation rollback (matching JA_MES_Tool)
+  late final double _origCardBlur;
+  late final double _origCardOpacity;
+  late final double _origDialogBlur;
+  late final double _origDialogOpacity;
+  late final bool _origEnableMeshOrbs;
+  late final double _origMeshOrbOpacity;
+  late final PerfTierMode _origPerfMode;
+
   @override
   void initState() {
     super.initState();
     _activeTab = widget.initialTab.clamp(0, 3);
     final t = widget.theme;
-    _cardBlur = t.cardBlur;
-    _cardOpacity = t.cardOpacity;
-    _dialogBlur = t.dialogBlur;
-    _dialogOpacity = t.dialogOpacity;
-    _enableMeshOrbs = t.enableMeshOrbs;
-    _meshOrbOpacity = t.meshOrbOpacity;
+    _origCardBlur = t.cardBlur;
+    _origCardOpacity = t.cardOpacity;
+    _origDialogBlur = t.dialogBlur;
+    _origDialogOpacity = t.dialogOpacity;
+    _origEnableMeshOrbs = t.enableMeshOrbs;
+    _origMeshOrbOpacity = t.meshOrbOpacity;
+    _origPerfMode = t.perfMode;
+
+    _cardBlur = _origCardBlur;
+    _cardOpacity = _origCardOpacity;
+    _dialogBlur = _origDialogBlur;
+    _dialogOpacity = _origDialogOpacity;
+    _enableMeshOrbs = _origEnableMeshOrbs;
+    _meshOrbOpacity = _origMeshOrbOpacity;
+  }
+
+  void _rollbackAndClose() {
+    widget.theme.setLiveGlassmorphism(
+      cardBlur: _origCardBlur,
+      cardOpacity: _origCardOpacity,
+      dialogBlur: _origDialogBlur,
+      dialogOpacity: _origDialogOpacity,
+      enableMeshOrbs: _origEnableMeshOrbs,
+      meshOrbOpacity: _origMeshOrbOpacity,
+    );
+    widget.theme.setPerfTierMode(_origPerfMode);
+    Navigator.pop(context, false);
   }
 
   void _resetDefaults() {
@@ -84,15 +114,21 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
     final t = widget.theme;
     final c = t.colors;
 
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: _dialogBlur, sigmaY: _dialogBlur),
-      child: Dialog(
-        backgroundColor: c.headerBg.withValues(alpha: _dialogOpacity),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: c.borderDefault, width: 1.2),
-        ),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _rollbackAndClose();
+      },
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: _dialogBlur, sigmaY: _dialogBlur),
+        child: Dialog(
+          backgroundColor: c.headerBg.withValues(alpha: _dialogOpacity),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(color: c.borderDefault, width: 1.2),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
         child: Container(
           width: 660,
           height: 600,
@@ -145,7 +181,7 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
                   IconButton(
                     icon: const Icon(Icons.close_rounded, size: 18),
                     color: c.textSecondary,
-                    onPressed: () => Navigator.pop(context, false),
+                    onPressed: _rollbackAndClose,
                   ),
                 ],
               ),
@@ -173,7 +209,7 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   OutlinedButton(
-                    onPressed: () => Navigator.pop(context, false),
+                    onPressed: _rollbackAndClose,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: c.textSecondary,
                       side: BorderSide(color: c.borderDefault),
@@ -224,6 +260,7 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
           ),
         ),
       ),
+    ),
     );
   }
 

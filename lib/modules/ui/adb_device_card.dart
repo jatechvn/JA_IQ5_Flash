@@ -61,6 +61,8 @@ class AdbDeviceCard extends StatelessWidget {
 
     return BentoCard(
       colors: c,
+      blurSigma: t.cardBlur,
+      bgOpacity: t.cardOpacity,
       glowColor: glow,
       isFeatured: isBusy || status == 'success',
       padding: const EdgeInsets.all(10),

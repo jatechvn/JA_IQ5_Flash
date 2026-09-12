@@ -69,6 +69,7 @@ class _MainWindowState extends State<MainWindow> {
   @override
   void initState() {
     super.initState();
+    widget.theme.addListener(_onThemeChanged);
     _initSlots();
     _initLogFile();
     _pathController = TextEditingController(text: _fwDir);
@@ -101,6 +102,21 @@ class _MainWindowState extends State<MainWindow> {
     });
   }
 
+  @override
+  void didUpdateWidget(MainWindow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.theme != widget.theme) {
+      oldWidget.theme.removeListener(_onThemeChanged);
+      widget.theme.addListener(_onThemeChanged);
+    }
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   void _initSlots() {
     _slots = [
       FirmwareSlotProfile(
@@ -126,6 +142,7 @@ class _MainWindowState extends State<MainWindow> {
 
   @override
   void dispose() {
+    widget.theme.removeListener(_onThemeChanged);
     _devicePollTimer?.cancel();
     _licenseRefreshTimer?.cancel();
     _deviceManager.dispose();
@@ -1461,19 +1478,25 @@ class _MainWindowState extends State<MainWindow> {
                       final validation = slot.lastValidation;
 
                       // Adaptive Slot Card & Badge Styling
-                      final Color cardBg = isSelected
+                      final Color? cardBg = isSelected
                           ? (c.isDark
                               ? Color.alphaBlend(
                                   slotColor.withValues(alpha: 0.18),
-                                  const Color(0xFF1E293B).withValues(alpha: 0.65),
+                                  const Color(0xFF1E293B).withValues(
+                                    alpha: (t.cardOpacity * 1.5).clamp(0.20, 0.90),
+                                  ),
                                 )
                               : Color.alphaBlend(
                                   slotColor.withValues(alpha: 0.08),
-                                  Colors.white.withValues(alpha: 0.94),
+                                  Colors.white.withValues(
+                                    alpha: (t.cardOpacity * 2.2).clamp(0.40, 0.96),
+                                  ),
                                 ))
                           : (c.isDark
-                              ? c.cardBg
-                              : Colors.white.withValues(alpha: 0.70));
+                              ? null
+                              : Colors.white.withValues(
+                                  alpha: (t.cardOpacity * 2.0).clamp(0.20, 0.90),
+                                ));
 
                       final Color badgeTextColor = c.isDark
                           ? slotColor
@@ -1526,7 +1549,9 @@ class _MainWindowState extends State<MainWindow> {
                               child: BentoCard(
                                 colors: c,
                                 blurSigma: t.cardBlur,
-                                bgOpacity: isSelected ? 0.35 : t.cardOpacity,
+                                bgOpacity: isSelected
+                                    ? (t.cardOpacity * 1.3).clamp(0.10, 0.95)
+                                    : t.cardOpacity,
                                 isFeatured: isSelected,
                                 showTopHighlight: !isSelected,
                                 customBg: cardBg,
@@ -2014,7 +2039,9 @@ class _MainWindowState extends State<MainWindow> {
                       flex: 6,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: c.headerBg.withValues(alpha: 0.35),
+                          color: c.headerBg.withValues(
+                            alpha: (t.cardOpacity * 1.4).clamp(0.15, 0.70),
+                          ),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: c.headerBorder),
                         ),
@@ -2028,7 +2055,9 @@ class _MainWindowState extends State<MainWindow> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: c.subCardBg.withValues(alpha: 0.45),
+                                color: c.subCardBg.withValues(
+                                  alpha: (t.cardOpacity * 1.6).clamp(0.20, 0.85),
+                                ),
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(9),
                                 ),
@@ -2194,7 +2223,9 @@ class _MainWindowState extends State<MainWindow> {
                       flex: 5,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: c.headerBg.withValues(alpha: 0.35),
+                          color: c.headerBg.withValues(
+                            alpha: (t.cardOpacity * 1.4).clamp(0.15, 0.70),
+                          ),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: c.headerBorder),
                         ),
@@ -2208,7 +2239,9 @@ class _MainWindowState extends State<MainWindow> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: c.subCardBg.withValues(alpha: 0.45),
+                                color: c.subCardBg.withValues(
+                                  alpha: (t.cardOpacity * 1.6).clamp(0.20, 0.85),
+                                ),
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(9),
                                 ),
