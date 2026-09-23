@@ -311,7 +311,9 @@ class _DeviceCardState extends State<DeviceCard> {
                           icon: Icon(
                             Icons.flash_on,
                             size: 13,
-                            color: isManualDisabled ? c.textMuted : Colors.white,
+                            color: isManualDisabled
+                                ? c.textMuted
+                                : Colors.white,
                           ),
                           label: Text(
                             tr('card_flash_btn'),

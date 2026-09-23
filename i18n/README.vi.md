@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.2.1-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.3.0-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
@@ -104,13 +104,19 @@ Với quy trình 3 giai đoạn tự động (Fastboot → ADB → EDL → Flash
 
 ## ⚡ Hướng dẫn Khởi động Nhanh
 
-### Cách A: Chạy bản Portable độc lập (Khuyên dùng)
-1. Tải gói phát hành `JA_IQ5_Flash_v1.2.1_Windows_x64.zip` từ mục [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases).
+### Cách A: Cài đặt chuẩn vào Windows (Khuyên dùng)
+1. Tải gói phát hành `JA_IQ5_Flash_v1.3.0_Windows_x64.zip` từ mục [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases).
+2. Giải nén gói, nhấp đúp vào `install.bat` để cài đặt tự động (không cần quyền Administrator).
+3. Ứng dụng được cài đặt vào `%LOCALAPPDATA%\Programs\JA_IQ5_Flash` với đầy đủ shortcut Desktop và Start Menu.
+4. Gỡ bỏ dễ dàng qua `uninstall.bat` hoặc Control Panel / Windows Settings.
+
+### Cách B: Chạy bản Portable độc lập
+1. Tải gói phát hành `JA_IQ5_Flash_v1.3.0_Windows_x64.zip` từ mục [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases).
 2. Giải nén vào một thư mục bất kỳ (ví dụ: `D:\Tools\JA_IQ5_Flash\`).
 3. Chạy file `ja_iq5_flash.exe`.
 4. Đảm bảo máy tính Windows đã cài đặt đầy đủ driver Qualcomm QDLoader 9008 và driver USB Android.
 
-### Cách B: Biên dịch từ Mã nguồn
+### Cách C: Biên dịch từ Mã nguồn
 Yêu cầu môi trường:
 - Flutter SDK $\ge 3.22.0$ (Dart $\ge 3.4.0$)
 - Visual Studio 2022 với gói "Desktop development with C++"
@@ -139,6 +145,13 @@ File thực thi và file nén zip đóng gói sẽ được tạo tự động t
 
 Chi tiết lịch sử các phiên bản có tại [CHANGELOG.md](../CHANGELOG.md).
 
+- **v1.3.0 (21/09/2026)**:
+  - Tích hợp toàn diện cơ chế cập nhật tự động qua mạng LAN OTA (`OtaUpdateService` + `update_config.json`).
+  - Hộp thoại cập nhật Bento Frosted Glass hiện đại (`GlassUpdateDialog`) với chi tiết phiên bản, ghi chú phát hành và tiến độ %.
+  - Tab Cài đặt thứ 5 ("LAN OTA") cho phép cấu hình tần suất kiểm tra, đường dẫn SMB/UNC, tài khoản mật khẩu, thử kết nối và mở thư mục cấu hình.
+  - Huy hiệu Top Bar mở rộng và cơ chế kiểm tra tự động chạy nền khi khởi động.
+  - Sửa lỗi hiển thị trùng lặp icon trên thanh công cụ EDL và ADB.
+  - Bộ kiểm thử tự động toàn diện với 57/57 tests xanh 100%.
 - **v1.2.1 (12/09/2026)**:
   - Cập nhật thời gian thực (real-time live preview) cho thanh trượt Bento Card Blur & Opacity chuẩn MES Tool.
   - Tích hợp kiến trúc `ChangeNotifierProvider` toàn cục với `context.watch<AppTheme>()`.

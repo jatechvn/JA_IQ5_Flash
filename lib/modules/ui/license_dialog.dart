@@ -173,7 +173,9 @@ class _LicenseDialogState extends State<LicenseDialog> {
                     ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.15),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.4),
+                      ),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -259,7 +261,9 @@ class _LicenseDialogState extends State<LicenseDialog> {
                 style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
                 decoration: InputDecoration(
                   hintText: tr('lic_placeholder'),
-                  hintStyle: TextStyle(color: t.textSecondary.withValues(alpha: 0.5)),
+                  hintStyle: TextStyle(
+                    color: t.textSecondary.withValues(alpha: 0.5),
+                  ),
                   filled: true,
                   fillColor: t.isDark ? Colors.black26 : Colors.black12,
                   border: OutlineInputBorder(
@@ -306,7 +310,9 @@ class _LicenseDialogState extends State<LicenseDialog> {
                       onPressed: _isSyncing ? null : _syncFromServer,
                       style: OutlinedButton.styleFrom(
                         foregroundColor: t.gradStart,
-                        side: BorderSide(color: t.gradStart.withValues(alpha: 0.5)),
+                        side: BorderSide(
+                          color: t.gradStart.withValues(alpha: 0.5),
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),

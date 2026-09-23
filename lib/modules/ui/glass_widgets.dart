@@ -184,10 +184,7 @@ class GlassScaffold extends StatelessWidget {
           // 2. GPU-Composited Floating Mesh Orbs
           if (enableMeshOrbs)
             Positioned.fill(
-              child: MeshBackground(
-                colors: colors,
-                orbOpacity: orbOpacity,
-              ),
+              child: MeshBackground(colors: colors, orbOpacity: orbOpacity),
             ),
 
           // 3. Main Content Tree
@@ -257,13 +254,16 @@ class BentoCard extends StatelessWidget {
     final effectiveOpacity = bgOpacity ?? theme?.cardOpacity;
     final effectiveBg = customBg != null
         ? (effectiveOpacity != null
-            ? customBg!.withValues(
-                alpha: (customBg!.a * (effectiveOpacity / 0.25)).clamp(0.04, 0.98),
-              )
-            : customBg!)
+              ? customBg!.withValues(
+                  alpha: (customBg!.a * (effectiveOpacity / 0.25)).clamp(
+                    0.04,
+                    0.98,
+                  ),
+                )
+              : customBg!)
         : (effectiveOpacity != null
-            ? colors.cardBg.withValues(alpha: effectiveOpacity)
-            : colors.cardBg);
+              ? colors.cardBg.withValues(alpha: effectiveOpacity)
+              : colors.cardBg);
     final effectiveBorder =
         customBorder ??
         (isFeatured
@@ -308,7 +308,9 @@ class BentoCard extends StatelessWidget {
                   border: Border(
                     top: BorderSide(
                       color: isFeatured
-                          ? (glowColor ?? colors.accentCyan).withValues(alpha: 0.7)
+                          ? (glowColor ?? colors.accentCyan).withValues(
+                              alpha: 0.7,
+                            )
                           : colors.glassHighlight,
                       width: 1.0,
                     ),
@@ -370,10 +372,7 @@ class _RotatingGlowBorderState extends State<RotatingGlowBorder>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
     if (widget.isActive) {
       _controller.repeat();
@@ -499,16 +498,7 @@ class RotatingGlowBorderPainter extends CustomPainter {
         color.withValues(alpha: 0.15),
         color.withValues(alpha: 0.0),
       ],
-      stops: const [
-        0.0,
-        0.05,
-        0.12,
-        0.16,
-        0.20,
-        0.26,
-        0.34,
-        1.0,
-      ],
+      stops: const [0.0, 0.05, 0.12, 0.16, 0.20, 0.26, 0.34, 1.0],
     );
 
     // 1. Diffuse outer neon bloom
@@ -538,7 +528,6 @@ class RotatingGlowBorderPainter extends CustomPainter {
         oldDelegate.glowBlur != glowBlur;
   }
 }
-
 
 // ── SubCard ─────────────────────────────────────────────────────────────────
 
@@ -572,15 +561,21 @@ class SubCard extends StatelessWidget {
     final effectiveOpacity = bgOpacity ?? theme?.cardOpacity;
     final effectiveBg = customBg != null
         ? (effectiveOpacity != null
-            ? customBg!.withValues(
-                alpha: (customBg!.a * (effectiveOpacity / 0.25)).clamp(0.04, 0.98),
-              )
-            : customBg!)
+              ? customBg!.withValues(
+                  alpha: (customBg!.a * (effectiveOpacity / 0.25)).clamp(
+                    0.04,
+                    0.98,
+                  ),
+                )
+              : customBg!)
         : (effectiveOpacity != null
-            ? colors.subCardBg.withValues(
-                alpha: (colors.subCardBg.a * (effectiveOpacity / 0.25)).clamp(0.04, 0.98),
-              )
-            : colors.subCardBg);
+              ? colors.subCardBg.withValues(
+                  alpha: (colors.subCardBg.a * (effectiveOpacity / 0.25)).clamp(
+                    0.04,
+                    0.98,
+                  ),
+                )
+              : colors.subCardBg);
 
     return Container(
       padding: padding,
@@ -638,12 +633,7 @@ class PillBadge extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: color,
-                boxShadow: [
-                  BoxShadow(
-                    color: color,
-                    blurRadius: 6,
-                  ),
-                ],
+                boxShadow: [BoxShadow(color: color, blurRadius: 6)],
               ),
             ),
             const SizedBox(width: 5),
@@ -700,9 +690,7 @@ class GlowingActionButton extends StatelessWidget {
         (isDestructive ? colors.accentRose : colors.accentColor);
     final end =
         customEndColor ??
-        (isDestructive
-            ? const Color(0xFFBE123C)
-            : colors.accentCyan);
+        (isDestructive ? const Color(0xFFBE123C) : colors.accentCyan);
 
     final gradient = LinearGradient(
       colors: [start, end],
@@ -715,8 +703,8 @@ class GlowingActionButton extends StatelessWidget {
         (isDestructive
             ? colors.accentRose.withValues(alpha: 0.4)
             : (customStartColor != null
-                ? customStartColor!.withValues(alpha: 0.35)
-                : colors.primaryGlow));
+                  ? customStartColor!.withValues(alpha: 0.35)
+                  : colors.primaryGlow));
 
     final isDisabled = onPressed == null;
 
@@ -759,9 +747,7 @@ class GlowingActionButton extends StatelessWidget {
           child: Container(
             height: height,
             alignment: Alignment.center,
-            padding: EdgeInsets.symmetric(
-              horizontal: height <= 30 ? 10 : 14,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: height <= 30 ? 10 : 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
@@ -1233,10 +1219,7 @@ class _GlassBouncePathFieldState extends State<GlassBouncePathField> {
                   ),
                   border: InputBorder.none,
                   hintText: widget.hintText,
-                  hintStyle: TextStyle(
-                    color: c.textMuted,
-                    fontSize: 10.5,
-                  ),
+                  hintStyle: TextStyle(color: c.textMuted, fontSize: 10.5),
                 ),
                 onSubmitted: widget.onSubmitted,
                 onChanged: widget.onChanged,
@@ -1278,4 +1261,3 @@ class _GlassBouncePathFieldState extends State<GlassBouncePathField> {
     );
   }
 }
-

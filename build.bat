@@ -13,7 +13,7 @@ cd /d "%WORKSPACE_DIR%"
 :: Read app version from pubspec.yaml so release naming never drifts out of sync
 for /f "tokens=2 delims= " %%v in ('findstr /b "version:" pubspec.yaml') do set PUBSPEC_VERSION=%%v
 for /f "tokens=1 delims=+" %%v in ("%PUBSPEC_VERSION%") do set APP_VERSION=%%v
-if "%APP_VERSION%"=="" set APP_VERSION=1.2.1
+if "%APP_VERSION%"=="" set APP_VERSION=1.3.0
 echo Detected app version: v%APP_VERSION%
 echo.
 
@@ -68,12 +68,9 @@ if exist "assets" (
     echo Copying assets/...
     xcopy /e /i /y /q "assets" "%RELEASE_DIR%\assets\"
 )
-if exist "debug.bat" copy /y "debug.bat" "%RELEASE_DIR%\" >nul
-if exist "ABOUT.txt" copy /y "ABOUT.txt" "%RELEASE_DIR%\" >nul
-if exist "README.md" copy /y "README.md" "%RELEASE_DIR%\" >nul
-if exist "FLASH_TROUBLESHOOTING.md" copy /y "FLASH_TROUBLESHOOTING.md" "%RELEASE_DIR%\" >nul
-if exist "LICENSE" copy /y "LICENSE" "%RELEASE_DIR%\" >nul
-if exist "license.key.example" copy /y "license.key.example" "%RELEASE_DIR%\" >nul
+for %%f in (install.bat uninstall.bat uninstall.ps1 debug.bat ABOUT.txt README.md CHANGELOG.md USERGUIDE.md RELEASE_NOTES.md FLASH_TROUBLESHOOTING.md LICENSE license.key.example) do (
+    if exist "%%f" copy /y "%%f" "%RELEASE_DIR%\" >nul
+)
 
 :: Create .Release.lnk shortcut at workspace root pointing to dist\
 powershell -NoProfile -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('.Release.lnk'); $Shortcut.TargetPath = Join-Path (Get-Item .).FullName 'dist'; $Shortcut.Save()"
@@ -99,6 +96,10 @@ mkdir "dist_pack\%PACK_NAME%"
 xcopy /e /i /y /q "%RELEASE_DIR%\*.*" "dist_pack\%PACK_NAME%\"
 powershell -NoProfile -Command "Compress-Archive -Path 'dist_pack\*' -DestinationPath 'dist\%PACK_NAME%.zip' -Force"
 if exist "dist_pack" rmdir /s /q "dist_pack"
+
+:: Generate SHA256 checksum and OTA version metadata
+powershell -NoProfile -Command "$hash = (Get-FileHash -Path 'dist\%PACK_NAME%.zip' -Algorithm SHA256).Hash; Set-Content -Path 'dist\SHA256SUMS.txt' -Value \"$hash *%PACK_NAME%.zip\""
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$pub = Get-Content 'pubspec.yaml' -Raw; if ($pub -match '(?m)^version:\s*([^\r\n]+)') { $v = $Matches[1].Trim(); $baseV = $v.Split('+')[0]; $zip = 'JA_IQ5_Flash_v' + $baseV + '_Windows_x64.zip'; $notes = ''; if (Test-Path 'RELEASE_NOTES.md') { $notes = (Get-Content 'RELEASE_NOTES.md' -Raw).Trim() }; $meta = [ordered]@{ version = $v; fileName = $zip; releaseNotes = $notes; releaseDate = (Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ') }; $meta | ConvertTo-Json -Depth 4 | Set-Content 'dist\version.json' -Encoding UTF8 }"
 
 echo.
 echo =======================================================================

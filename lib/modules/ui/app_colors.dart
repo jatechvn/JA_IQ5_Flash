@@ -80,7 +80,9 @@ const win11DarkColors = AppColors(
   headerBg: Color(0x400F172A),
   headerBorder: Color(0x1FFFFFFF),
   textPrimary: Color(0xFFF8FAFC),
-  textSecondary: Color(0xFFCBD5E1), // Slate 300 - high contrast readability on dark glass
+  textSecondary: Color(
+    0xFFCBD5E1,
+  ), // Slate 300 - high contrast readability on dark glass
   textMuted: Color(0xFF94A3B8), // Slate 400 - clean legible muted tone
   borderDefault: Color(0x1FFFFFFF),
   accentColor: Color(0xFF0066FF),
@@ -142,7 +144,9 @@ const win10DarkColors = AppColors(
   headerBg: Color(0x4D0F172A),
   headerBorder: Color(0x26FFFFFF),
   textPrimary: Color(0xFFF8FAFC),
-  textSecondary: Color(0xFFCBD5E1), // Slate 300 - high contrast readability on dark glass
+  textSecondary: Color(
+    0xFFCBD5E1,
+  ), // Slate 300 - high contrast readability on dark glass
   textMuted: Color(0xFF94A3B8), // Slate 400 - clean legible muted tone
   borderDefault: Color(0x26FFFFFF),
   accentColor: Color(0xFF0066FF),

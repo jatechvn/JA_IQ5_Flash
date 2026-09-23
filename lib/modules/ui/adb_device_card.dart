@@ -34,9 +34,13 @@ class AdbDeviceCard extends StatelessWidget {
     final badgeColor = isFastboot ? c.accentPurple : c.accentCyan;
 
     // Map status states to icon and label color
-    IconData statusIcon = isFastboot ? Icons.electrical_services_rounded : Icons.smartphone_rounded;
+    IconData statusIcon = isFastboot
+        ? Icons.electrical_services_rounded
+        : Icons.smartphone_rounded;
     Color statusLabelColor = c.textSecondary;
-    String statusText = isFastboot ? tr('adb_fastboot_ready') : tr('adb_connected');
+    String statusText = isFastboot
+        ? tr('adb_fastboot_ready')
+        : tr('adb_connected');
     Color? glow;
 
     if (status == 'waiting') {
@@ -76,11 +80,16 @@ class AdbDeviceCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: badgeColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(5),
-                    border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: badgeColor.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     badgeLabel,

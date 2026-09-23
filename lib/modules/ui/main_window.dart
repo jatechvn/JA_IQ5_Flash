@@ -22,6 +22,8 @@ import 'device_card.dart';
 import 'adb_device_card.dart';
 import 'glass_widgets.dart';
 import 'settings_dialog.dart';
+import '../services/ota_update_service.dart';
+import 'glass_update_dialog.dart';
 
 class MainWindow extends StatefulWidget {
   final AppTheme theme;
@@ -65,6 +67,7 @@ class _MainWindowState extends State<MainWindow> {
   late final TextEditingController _pathController;
   int _terminalHeightMode =
       1; // 0: collapsed (34px), 1: compact (92px), 2: expanded (170px)
+  UpdatePackageInfo? _availableUpdate;
 
   @override
   void initState() {
@@ -75,6 +78,7 @@ class _MainWindowState extends State<MainWindow> {
     _pathController = TextEditingController(text: _fwDir);
     _loadConfig();
     _checkLicense();
+    _initOtaCheck();
 
     _deviceManager = DeviceManager(
       onDeviceAdded: _onDeviceAdded,
@@ -99,6 +103,29 @@ class _MainWindowState extends State<MainWindow> {
       if (!mounted) return;
       _deviceManager.poll();
       _appendGlobalLog(tr('log_app_started'), 'info');
+    });
+  }
+
+  void _initOtaCheck() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final otaService = OtaUpdateService();
+        final config = await otaService.loadExternalConfigFile();
+        final shouldCheck = otaService.shouldCheckForUpdates(
+          interval: config.checkInterval,
+          lastCheckTime: config.lastCheckTime,
+        );
+        if (shouldCheck) {
+          final result = await otaService.checkForUpdates();
+          if (mounted && result.hasUpdate && result.packageInfo != null) {
+            setState(() {
+              _availableUpdate = result.packageInfo;
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint('[MainWindow] OTA auto-check error: $e');
+      }
     });
   }
 
@@ -1137,8 +1164,7 @@ class _MainWindowState extends State<MainWindow> {
       msg =
           '⚡ Graphic Tier: ${t.perfLabel} (Optimized for ${t.cpuCores} CPU Cores)';
     } else if (lang == 'CN') {
-      msg =
-          '⚡ 硬件档位: ${t.perfLabel} (针对 ${t.cpuCores} 核处理器优化)';
+      msg = '⚡ 硬件档位: ${t.perfLabel} (针对 ${t.cpuCores} 核处理器优化)';
     } else {
       msg =
           '⚡ Cấu hình máy: ${t.perfLabel} (Tự động nhận diện CPU ${t.cpuCores} Cores)';
@@ -1200,7 +1226,7 @@ class _MainWindowState extends State<MainWindow> {
   }
 
   Future<void> _openLicenseManager() async {
-    await _openSettings(initialTab: 3);
+    await _openSettings(initialTab: 4);
   }
 
   @override
@@ -1216,10 +1242,8 @@ class _MainWindowState extends State<MainWindow> {
     String fwStatusText = activeValidation.localizedMessage;
     if (activeValidation.isValid) {
       fwStatusColor = c.accentEmerald;
-      fwStatusText = '✅ ${activeValidation.localizedMessage}';
     } else if (activeValidation.statusKey == 'fw_missing') {
       fwStatusColor = c.accentAmber;
-      fwStatusText = '⚠️ ${activeValidation.localizedMessage}';
     }
 
     return GlassScaffold(
@@ -1312,6 +1336,33 @@ class _MainWindowState extends State<MainWindow> {
                   ),
 
                   const Spacer(),
+
+                  // OTA Available Update Badge
+                  if (_availableUpdate != null) ...[
+                    TopBarExpandingButton(
+                      icon: Icon(
+                        Icons.system_update_alt_rounded,
+                        color: c.accentEmerald,
+                        size: 14,
+                      ),
+                      collapsedLabel:
+                          'v${_availableUpdate!.version.displayVersion}',
+                      expandedLabel: tr('ota_update_now'),
+                      textColor: c.accentEmerald,
+                      tooltip: tr('ota_update_available', [
+                        _availableUpdate!.version.displayVersion,
+                      ]),
+                      colors: c,
+                      onTap: () {
+                        showGlassUpdateDialog(
+                          context: context,
+                          packageInfo: _availableUpdate!,
+                          theme: widget.theme,
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 6),
+                  ],
 
                   // 1. License Status Capsule with Hover Expand (Showcase Style)
                   if (_licenseInfo != null) ...[
@@ -1480,52 +1531,61 @@ class _MainWindowState extends State<MainWindow> {
                       // Adaptive Slot Card & Badge Styling
                       final Color? cardBg = isSelected
                           ? (c.isDark
-                              ? Color.alphaBlend(
-                                  slotColor.withValues(alpha: 0.18),
-                                  const Color(0xFF1E293B).withValues(
-                                    alpha: (t.cardOpacity * 1.5).clamp(0.20, 0.90),
-                                  ),
-                                )
-                              : Color.alphaBlend(
-                                  slotColor.withValues(alpha: 0.08),
-                                  Colors.white.withValues(
-                                    alpha: (t.cardOpacity * 2.2).clamp(0.40, 0.96),
-                                  ),
-                                ))
+                                ? Color.alphaBlend(
+                                    slotColor.withValues(alpha: 0.18),
+                                    const Color(0xFF1E293B).withValues(
+                                      alpha: (t.cardOpacity * 1.5).clamp(
+                                        0.20,
+                                        0.90,
+                                      ),
+                                    ),
+                                  )
+                                : Color.alphaBlend(
+                                    slotColor.withValues(alpha: 0.08),
+                                    Colors.white.withValues(
+                                      alpha: (t.cardOpacity * 2.2).clamp(
+                                        0.40,
+                                        0.96,
+                                      ),
+                                    ),
+                                  ))
                           : (c.isDark
-                              ? null
-                              : Colors.white.withValues(
-                                  alpha: (t.cardOpacity * 2.0).clamp(0.20, 0.90),
-                                ));
+                                ? null
+                                : Colors.white.withValues(
+                                    alpha: (t.cardOpacity * 2.0).clamp(
+                                      0.20,
+                                      0.90,
+                                    ),
+                                  ));
 
                       final Color badgeTextColor = c.isDark
                           ? slotColor
                           : (slot.type == FirmwareSlotType.factory
-                              ? const Color(0xFF0369A1) // Sky 700
-                              : (slot.type == FirmwareSlotType.user
-                                  ? const Color(0xFF047857) // Emerald 700
-                                  : const Color(0xFFB45309))); // Amber 700
+                                ? const Color(0xFF0369A1) // Sky 700
+                                : (slot.type == FirmwareSlotType.user
+                                      ? const Color(0xFF047857) // Emerald 700
+                                      : const Color(0xFFB45309))); // Amber 700
 
                       final Color badgeBg = c.isDark
                           ? slotColor.withValues(
                               alpha: isSelected ? 0.28 : 0.12,
                             )
                           : (slot.type == FirmwareSlotType.factory
-                              ? const Color(0xFFE0F2FE)
-                              : (slot.type == FirmwareSlotType.user
-                                  ? const Color(0xFFD1FAE5)
-                                  : const Color(0xFFFEF3C7)))
-                              .withValues(alpha: isSelected ? 0.95 : 0.75);
+                                    ? const Color(0xFFE0F2FE)
+                                    : (slot.type == FirmwareSlotType.user
+                                          ? const Color(0xFFD1FAE5)
+                                          : const Color(0xFFFEF3C7)))
+                                .withValues(alpha: isSelected ? 0.95 : 0.75);
 
                       final Color badgeBorder = c.isDark
                           ? slotColor.withValues(
                               alpha: isSelected ? 0.70 : 0.30,
                             )
                           : (slot.type == FirmwareSlotType.factory
-                              ? const Color(0xFFBAE6FD)
-                              : (slot.type == FirmwareSlotType.user
-                                  ? const Color(0xFFA7F3D0)
-                                  : const Color(0xFFFDE68A)));
+                                ? const Color(0xFFBAE6FD)
+                                : (slot.type == FirmwareSlotType.user
+                                      ? const Color(0xFFA7F3D0)
+                                      : const Color(0xFFFDE68A)));
 
                       final Color errorStatusColor = c.isDark
                           ? const Color(0xFFFCA5A5)
@@ -1557,8 +1617,8 @@ class _MainWindowState extends State<MainWindow> {
                                 customBg: cardBg,
                                 customBorder: isSelected
                                     ? (c.isDark
-                                        ? slotColor.withValues(alpha: 0.35)
-                                        : slotColor.withValues(alpha: 0.55))
+                                          ? slotColor.withValues(alpha: 0.35)
+                                          : slotColor.withValues(alpha: 0.55))
                                     : null,
                                 glowColor: isSelected
                                     ? (c.isDark ? slotColor : null)
@@ -2056,7 +2116,10 @@ class _MainWindowState extends State<MainWindow> {
                               ),
                               decoration: BoxDecoration(
                                 color: c.subCardBg.withValues(
-                                  alpha: (t.cardOpacity * 1.6).clamp(0.20, 0.85),
+                                  alpha: (t.cardOpacity * 1.6).clamp(
+                                    0.20,
+                                    0.85,
+                                  ),
                                 ),
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(9),
@@ -2240,7 +2303,10 @@ class _MainWindowState extends State<MainWindow> {
                               ),
                               decoration: BoxDecoration(
                                 color: c.subCardBg.withValues(
-                                  alpha: (t.cardOpacity * 1.6).clamp(0.20, 0.85),
+                                  alpha: (t.cardOpacity * 1.6).clamp(
+                                    0.20,
+                                    0.85,
+                                  ),
                                 ),
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(9),
@@ -2439,66 +2505,111 @@ class _MainWindowState extends State<MainWindow> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOutCubic,
-              height: _terminalHeightMode == 0
-                  ? 34.0
-                  : (_terminalHeightMode == 1 ? 95.0 : 180.0),
-              decoration: BoxDecoration(
-                color: c.headerBg,
-                border: Border(top: BorderSide(color: c.headerBorder)),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.terminal_rounded,
-                        size: 14,
-                        color: c.accentCyan,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        tr('terminal_title'),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                          color: c.textPrimary,
+                height: _terminalHeightMode == 0
+                    ? 34.0
+                    : (_terminalHeightMode == 1 ? 95.0 : 180.0),
+                decoration: BoxDecoration(
+                  color: c.headerBg,
+                  border: Border(top: BorderSide(color: c.headerBorder)),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 5,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.terminal_rounded,
+                          size: 14,
+                          color: c.accentCyan,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      PillBadge(
-                        label: '${_globalLogs.length} ${tr('log_lines_count')}',
-                        color: c.textSecondary,
-                        bg: c.subCardBg,
-                        border: c.subCardBorder,
-                        fontSize: 8.5,
-                      ),
-                      const SizedBox(width: 6),
-                      PillBadge(
-                        label: _terminalHeightMode == 0
-                            ? tr('terminal_height_collapsed')
-                            : (_terminalHeightMode == 1
-                                  ? tr('terminal_height_compact')
-                                  : tr('terminal_height_expanded')),
-                        color: c.accentCyan,
-                        bg: c.accentCyan.withValues(alpha: 0.12),
-                        border: c.accentCyan.withValues(alpha: 0.3),
-                        fontSize: 8.5,
-                      ),
-                      const Spacer(),
+                        const SizedBox(width: 6),
+                        Text(
+                          tr('terminal_title'),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                            color: c.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        PillBadge(
+                          label:
+                              '${_globalLogs.length} ${tr('log_lines_count')}',
+                          color: c.textSecondary,
+                          bg: c.subCardBg,
+                          border: c.subCardBorder,
+                          fontSize: 8.5,
+                        ),
+                        const SizedBox(width: 6),
+                        PillBadge(
+                          label: _terminalHeightMode == 0
+                              ? tr('terminal_height_collapsed')
+                              : (_terminalHeightMode == 1
+                                    ? tr('terminal_height_compact')
+                                    : tr('terminal_height_expanded')),
+                          color: c.accentCyan,
+                          bg: c.accentCyan.withValues(alpha: 0.12),
+                          border: c.accentCyan.withValues(alpha: 0.3),
+                          fontSize: 8.5,
+                        ),
+                        const Spacer(),
 
-                      // Toggle Height Mode Button
-                      Tooltip(
-                        message: tr('terminal_toggle_tooltip'),
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              _terminalHeightMode =
-                                  (_terminalHeightMode + 1) % 3;
-                            });
-                          },
+                        // Toggle Height Mode Button
+                        Tooltip(
+                          message: tr('terminal_toggle_tooltip'),
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _terminalHeightMode =
+                                    (_terminalHeightMode + 1) % 3;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(6),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 3,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _terminalHeightMode == 0
+                                        ? Icons.keyboard_arrow_up_rounded
+                                        : (_terminalHeightMode == 1
+                                              ? Icons.unfold_more_rounded
+                                              : Icons
+                                                    .keyboard_arrow_down_rounded),
+                                    size: 14,
+                                    color: c.accentCyan,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    _terminalHeightMode == 0
+                                        ? tr('terminal_height_collapsed')
+                                        : (_terminalHeightMode == 1
+                                              ? tr('terminal_height_compact')
+                                              : tr('terminal_height_expanded')),
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      color: c.accentCyan,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+
+                        // Copy Logs Button
+                        InkWell(
+                          onTap: _copyAllLogs,
                           borderRadius: BorderRadius.circular(6),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -2508,22 +2619,13 @@ class _MainWindowState extends State<MainWindow> {
                             child: Row(
                               children: [
                                 Icon(
-                                  _terminalHeightMode == 0
-                                      ? Icons.keyboard_arrow_up_rounded
-                                      : (_terminalHeightMode == 1
-                                            ? Icons.unfold_more_rounded
-                                            : Icons
-                                                  .keyboard_arrow_down_rounded),
-                                  size: 14,
+                                  Icons.content_copy_rounded,
+                                  size: 12,
                                   color: c.accentCyan,
                                 ),
                                 const SizedBox(width: 3),
                                 Text(
-                                  _terminalHeightMode == 0
-                                      ? tr('terminal_height_collapsed')
-                                      : (_terminalHeightMode == 1
-                                            ? tr('terminal_height_compact')
-                                            : tr('terminal_height_expanded')),
+                                  tr('copy_logs'),
                                   style: TextStyle(
                                     fontSize: 9.5,
                                     color: c.accentCyan,
@@ -2534,117 +2636,93 @@ class _MainWindowState extends State<MainWindow> {
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
+                        const SizedBox(width: 6),
 
-                      // Copy Logs Button
-                      InkWell(
-                        onTap: _copyAllLogs,
-                        borderRadius: BorderRadius.circular(6),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 3,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.content_copy_rounded,
-                                size: 12,
-                                color: c.accentCyan,
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                tr('copy_logs'),
-                                style: TextStyle(
-                                  fontSize: 9.5,
-                                  color: c.accentCyan,
-                                  fontWeight: FontWeight.bold,
+                        // Clear Logs Button
+                        InkWell(
+                          onTap: _clearLogs,
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 3,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 12,
+                                  color: c.accentRose,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 3),
+                                Text(
+                                  tr('clear_logs'),
+                                  style: TextStyle(
+                                    fontSize: 9.5,
+                                    color: c.accentRose,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
+                      ],
+                    ),
+                    if (_terminalHeightMode != 0) ...[
+                      const SizedBox(height: 4),
 
-                      // Clear Logs Button
-                      InkWell(
-                        onTap: _clearLogs,
-                        borderRadius: BorderRadius.circular(6),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 3,
+                      // Log ListView
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: c.subCardBg,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: c.subCardBorder),
                           ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.delete_outline_rounded,
-                                size: 12,
-                                color: c.accentRose,
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                tr('clear_logs'),
+                          padding: const EdgeInsets.all(6),
+                          child: ListView.builder(
+                            controller: _globalLogController,
+                            itemCount: _globalLogs.length,
+                            itemBuilder: (context, index) {
+                              final logLine = _globalLogs[index];
+                              Color logColor = c.textSecondary;
+                              if (logLine.contains('[SUCCESS]')) {
+                                logColor = c.isDark
+                                    ? const Color(0xFF6EE7B7)
+                                    : c.accentEmerald;
+                              } else if (logLine.contains('[ERROR]')) {
+                                logColor = c.isDark
+                                    ? const Color(0xFFFCA5A5)
+                                    : c.accentRose;
+                              } else if (logLine.contains('[WARN]')) {
+                                logColor = c.isDark
+                                    ? const Color(0xFFFDE047)
+                                    : c.accentAmber;
+                              } else if (logLine.contains('[INFO]')) {
+                                logColor = c.isDark
+                                    ? const Color(0xFF67E8F9)
+                                    : c.accentCyan;
+                              }
+                              return Text(
+                                logLine,
                                 style: TextStyle(
-                                  fontSize: 9.5,
-                                  color: c.accentRose,
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  fontSize: 10.0,
+                                  color: logColor,
+                                  height: 1.3,
                                 ),
-                              ),
-                            ],
+                              );
+                            },
                           ),
                         ),
                       ),
                     ],
-                  ),
-                  if (_terminalHeightMode != 0) ...[
-                    const SizedBox(height: 4),
-
-                    // Log ListView
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: c.subCardBg,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: c.subCardBorder),
-                        ),
-                        padding: const EdgeInsets.all(6),
-                        child: ListView.builder(
-                          controller: _globalLogController,
-                          itemCount: _globalLogs.length,
-                          itemBuilder: (context, index) {
-                            final logLine = _globalLogs[index];
-                            Color logColor = c.textSecondary;
-                            if (logLine.contains('[SUCCESS]')) {
-                              logColor = c.isDark ? const Color(0xFF6EE7B7) : c.accentEmerald;
-                            } else if (logLine.contains('[ERROR]')) {
-                              logColor = c.isDark ? const Color(0xFFFCA5A5) : c.accentRose;
-                            } else if (logLine.contains('[WARN]')) {
-                              logColor = c.isDark ? const Color(0xFFFDE047) : c.accentAmber;
-                            } else if (logLine.contains('[INFO]')) {
-                              logColor = c.isDark ? const Color(0xFF67E8F9) : c.accentCyan;
-                            }
-                            return Text(
-                              logLine,
-                              style: TextStyle(
-                                fontFamily: 'monospace',
-                                fontSize: 10.0,
-                                color: logColor,
-                                height: 1.3,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );

@@ -8,8 +8,8 @@ Engine       : Qualcomm EDL / fh_loader.exe / Sahara Protocol
 Managed By   : JA Auto Git
 Website      : https://jatechvn.github.io/
 ------------------------------------------------------------------------
-Version      : v1.2.1
-Release Date : 2026-09-12
+Version      : v1.3.0
+Release Date : 2026-09-23
 Author       : JATech VN
 License      : MIT
 Platform     : Windows 10 / 11 (x64)
@@ -29,6 +29,8 @@ Key Features :
   • Asymmetric Bounce Marquee Path: Smooth ping-pong marquee for long paths
   • Hardware Tier Profiling: Ultra (120 FPS), Balanced (60 FPS), Lite (Zero-Lag)
   • Real-time Bento Glassmorphism: Live blur (0-40px) & opacity (5-100%) tuning with cancel rollback
+  • LAN Over-The-Air (OTA) Updates: Automatic background checks, UNC/SMB share integration, and robocopy handoff
+  • Zero-Dependency Windows Installer: 1-click install.bat & uninstall.bat without Admin rights
   • Real-Time Bento Terminal: Multi-device high-contrast logging monitor
   • Hardware-Locked Licensing: HMAC-SHA256 machine signature validation
   • Trilingual Interface: English, Tieng Viet, 中文 (live dynamic switch)

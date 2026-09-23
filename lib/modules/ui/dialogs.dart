@@ -81,7 +81,10 @@ Future<bool> showConfirmDialog({
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: Text(effectiveOk, style: const TextStyle(color: Colors.white)),
+            child: Text(
+              effectiveOk,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

@@ -10,21 +10,22 @@ void setLang(String lang) {
 
 String getLang() => _lang;
 
-String tr(String key) {
+String tr(String key, [List<dynamic>? args]) {
   final entry = _strings[key];
-  if (entry == null) return key;
-  return entry[_lang] ?? entry['EN'] ?? key;
+  var val = entry != null ? (entry[_lang] ?? entry['EN'] ?? key) : key;
+  if (args != null && args.isNotEmpty) {
+    for (int i = 0; i < args.length; i++) {
+      val = val.replaceAll('{$i}', args[i].toString());
+    }
+  }
+  return val;
 }
 
 const Map<String, Map<String, String>> _strings = {
   // Firmware bar
-  'firmware_label': {
-    'EN': '💾  FIRMWARE:',
-    'VI': '💾  FIRMWARE:',
-    'CN': '💾  固件:',
-  },
-  'change_btn': {'EN': '📂 Browse', 'VI': '📂 Duyệt thư mục', 'CN': '📂 浏览'},
-  'paste_btn': {'EN': '📋 Paste', 'VI': '📋 Dán', 'CN': '📋 粘贴'},
+  'firmware_label': {'EN': 'FIRMWARE:', 'VI': 'FIRMWARE:', 'CN': '固件:'},
+  'change_btn': {'EN': 'Browse', 'VI': 'Duyệt thư mục', 'CN': '浏览'},
+  'paste_btn': {'EN': 'Paste', 'VI': 'Dán', 'CN': '粘贴'},
   'paste_tooltip': {
     'EN': 'Paste directory path from clipboard',
     'VI': 'Dán đường dẫn thư mục từ clipboard',
@@ -40,34 +41,70 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Đã cập nhật đường dẫn cho Slot',
     'CN': '已更新插槽路径',
   },
-  'open_folder_btn': {'EN': '🖥️ Reveal', 'VI': '🖥️ Mở thư mục', 'CN': '🖥️ 打开目录'},
-  'rename_slot': {'EN': '✏️ Rename', 'VI': '✏️ Đổi tên', 'CN': '✏️ 重命名'},
-  'slot_factory_rom': {'EN': 'Factory Stock ROM', 'VI': 'Bản ROM Chuẩn Nhà Máy', 'CN': '原厂官方固件'},
-  'slot_user_rom': {'EN': 'User / Custom ROM', 'VI': 'Bản ROM Khách Hàng / Tuỳ Biến', 'CN': '客户定制固件'},
-  'slot_diag_rom': {'EN': 'Diag / Test ROM', 'VI': 'Bản ROM Kỹ Thuật / Chẩn Đoán', 'CN': '工程测试固件'},
-  'slot_desc_factory': {'EN': 'Full partitions: boot, system, vendor, userdata...', 'VI': 'Phân vùng đầy đủ: boot, system, vendor, userdata...', 'CN': '完整分区: boot, system, vendor, userdata...'},
-  'slot_desc_user': {'EN': 'Customer apps & customized build', 'VI': 'Bản ROM cấu hình ứng dụng khách hàng & tùy biến', 'CN': '客户应用与定制版本'},
-  'slot_desc_diag': {'EN': 'Hardware QA, RF calibration & test', 'VI': 'Kiểm thử QA phần cứng & hiệu chuẩn RF', 'CN': '硬件测试与校准固件'},
-  'fw_empty': {'EN': '⚪ No folder configured', 'VI': '⚪ Chưa cấu hình thư mục', 'CN': '⚪ 未配置文件夹'},
+  'open_folder_btn': {'EN': 'Reveal', 'VI': 'Mở thư mục', 'CN': '打开目录'},
+  'rename_slot': {'EN': 'Rename', 'VI': 'Đổi tên', 'CN': '重命名'},
+  'slot_factory_rom': {
+    'EN': 'Factory Stock ROM',
+    'VI': 'Bản ROM Chuẩn Nhà Máy',
+    'CN': '原厂官方固件',
+  },
+  'slot_user_rom': {
+    'EN': 'User / Custom ROM',
+    'VI': 'Bản ROM Khách Hàng / Tuỳ Biến',
+    'CN': '客户定制固件',
+  },
+  'slot_diag_rom': {
+    'EN': 'Diag / Test ROM',
+    'VI': 'Bản ROM Kỹ Thuật / Chẩn Đoán',
+    'CN': '工程测试固件',
+  },
+  'slot_desc_factory': {
+    'EN': 'Full partitions: boot, system, vendor, userdata...',
+    'VI': 'Phân vùng đầy đủ: boot, system, vendor, userdata...',
+    'CN': '完整分区: boot, system, vendor, userdata...',
+  },
+  'slot_desc_user': {
+    'EN': 'Customer apps & customized build',
+    'VI': 'Bản ROM cấu hình ứng dụng khách hàng & tùy biến',
+    'CN': '客户应用与定制版本',
+  },
+  'slot_desc_diag': {
+    'EN': 'Hardware QA, RF calibration & test',
+    'VI': 'Kiểm thử QA phần cứng & hiệu chuẩn RF',
+    'CN': '硬件测试与校准固件',
+  },
+  'fw_empty': {
+    'EN': 'No folder configured',
+    'VI': 'Chưa cấu hình thư mục',
+    'CN': '未配置文件夹',
+  },
   'slot_active_badge': {'EN': 'ACTIVE', 'VI': 'ĐANG CHỌN', 'CN': '已选定'},
-  'copy_logs': {'EN': '📋 Copy Logs', 'VI': '📋 Sao chép log', 'CN': '📋 复制日志'},
-  'clear_logs': {'EN': '🗑️ Clear', 'VI': '🗑️ Xóa log', 'CN': '🗑️ 清空'},
-  'logs_copied': {'EN': 'Logs copied to clipboard', 'VI': 'Đã sao chép log vào clipboard', 'CN': '日志已复制到剪贴板'},
-  'connected_edl_badge': {'EN': 'EDL READY', 'VI': 'EDL SẴN SÀNG', 'CN': 'EDL就绪'},
-  'connected_adb_badge': {'EN': 'ADB / FASTBOOT', 'VI': 'ADB / FASTBOOT', 'CN': 'ADB/FASTBOOT'},
+  'copy_logs': {'EN': 'Copy Logs', 'VI': 'Sao chép log', 'CN': '复制日志'},
+  'clear_logs': {'EN': 'Clear', 'VI': 'Xóa log', 'CN': '清空'},
+  'logs_copied': {
+    'EN': 'Logs copied to clipboard',
+    'VI': 'Đã sao chép log vào clipboard',
+    'CN': '日志已复制到剪贴板',
+  },
+  'connected_edl_badge': {
+    'EN': 'EDL READY',
+    'VI': 'EDL SẴN SÀNG',
+    'CN': 'EDL就绪',
+  },
+  'connected_adb_badge': {
+    'EN': 'ADB / FASTBOOT',
+    'VI': 'ADB / FASTBOOT',
+    'CN': 'ADB/FASTBOOT',
+  },
 
   // Toolbar
-  'scan_now': {'EN': '🔍  Scan Now', 'VI': '🔍  Quét ngay', 'CN': '🔍  立即扫描'},
+  'scan_now': {'EN': 'Scan Now', 'VI': 'Quét ngay', 'CN': '立即扫描'},
   'no_devices': {
     'EN': 'No devices detected',
     'VI': 'Không phát hiện thiết bị',
     'CN': '未检测到设备',
   },
-  'auto_flash_label': {
-    'EN': '⚡ Auto Flash',
-    'VI': '⚡ Tự động Flash',
-    'CN': '⚡ 自动刷机',
-  },
+  'auto_flash_label': {'EN': 'Auto Flash', 'VI': 'Tự động Flash', 'CN': '自动刷机'},
   'auto_flash_tip': {
     'EN':
         'When ON:\n• ADB/Fastboot detected → auto reboot to EDL\n• EDL detected → auto flash\n• Flash done → auto reboot to ADB',
@@ -76,19 +113,19 @@ const Map<String, Map<String, String>> _strings = {
     'CN':
         '开启时:\n• 检测到ADB/Fastboot → 自动重启到EDL\n• 检测到EDL → 自动刷机\n• 刷机完成 → 自动重启到ADB',
   },
-  'flash_all': {'EN': '⚡  FLASH ALL', 'VI': '⚡  FLASH TẤT CẢ', 'CN': '⚡  全部刷机'},
-  'abort_all': {'EN': '■  Abort All', 'VI': '■  Dừng tất cả', 'CN': '■  全部中止'},
+  'flash_all': {'EN': 'FLASH ALL', 'VI': 'FLASH TẤT CẢ', 'CN': '全部刷机'},
+  'abort_all': {'EN': 'Abort All', 'VI': 'Dừng tất cả', 'CN': '全部中止'},
 
   // Section headers
   'edl_header': {
-    'EN': '📟  EDL (9008) — Flash Ready',
-    'VI': '📟  EDL (9008) — Sẵn sàng Flash',
-    'CN': '📟  EDL (9008) — 准备刷机',
+    'EN': 'EDL (9008) — Flash Ready',
+    'VI': 'EDL (9008) — Sẵn sàng Flash',
+    'CN': 'EDL (9008) — 准备刷机',
   },
   'reboot_all_adb': {
-    'EN': '🔄  Reboot All → ADB',
-    'VI': '🔄  Khởi động lại → ADB',
-    'CN': '🔄  全部重启 → ADB',
+    'EN': 'Reboot All → ADB',
+    'VI': 'Khởi động lại → ADB',
+    'CN': '全部重启 → ADB',
   },
   'reboot_all_tip': {
     'EN': 'Send Sahara RESET to all EDL devices → reboot to ADB',
@@ -97,14 +134,14 @@ const Map<String, Map<String, String>> _strings = {
     'CN': '向所有EDL设备发送Sahara复位 → 重启到ADB',
   },
   'adb_header': {
-    'EN': '📱  ADB / FASTBOOT — Boot to EDL',
-    'VI': '📱  ADB / FASTBOOT — Boot sang EDL',
-    'CN': '📱  ADB / FASTBOOT — 启动到EDL',
+    'EN': 'ADB / FASTBOOT — Boot to EDL',
+    'VI': 'ADB / FASTBOOT — Boot sang EDL',
+    'CN': 'ADB / FASTBOOT — 启动到EDL',
   },
   'boot_all_edl': {
-    'EN': '🔄  Boot All → EDL',
-    'VI': '🔄  Boot tất cả → EDL',
-    'CN': '🔄  全部启动 → EDL',
+    'EN': 'Boot All → EDL',
+    'VI': 'Boot tất cả → EDL',
+    'CN': '全部启动 → EDL',
   },
   'boot_all_tip': {
     'EN': 'Send reboot-edl to all ADB + fastboot devices',
@@ -204,26 +241,22 @@ const Map<String, Map<String, String>> _strings = {
     'CN': '在此粘贴许可证密钥…',
   },
   'lic_paste_clip': {
-    'EN': '📋 Paste from Clipboard',
-    'VI': '📋 Dán từ Clipboard',
-    'CN': '📋 从剪贴板粘贴',
+    'EN': 'Paste from Clipboard',
+    'VI': 'Dán từ Clipboard',
+    'CN': '从剪贴板粘贴',
   },
-  'lic_activate': {
-    'EN': '✅  Activate Key',
-    'VI': '✅  Kích Hoạt Key',
-    'CN': '✅  激活密钥',
-  },
+  'lic_activate': {'EN': 'Activate Key', 'VI': 'Kích Hoạt Key', 'CN': '激活密钥'},
   'lic_sync': {
-    'EN': '🔄 Sync from Server',
-    'VI': '🔄 Đồng bộ Server',
-    'CN': '🔄 从服务器同步',
+    'EN': 'Sync from Server',
+    'VI': 'Đồng bộ Server',
+    'CN': '从服务器同步',
   },
   'lic_close': {'EN': 'Close', 'VI': 'Đóng', 'CN': '关闭'},
   'lic_exit': {'EN': 'Exit App', 'VI': 'Thoát chương trình', 'CN': '退出程序'},
   'lic_copied': {
-    'EN': '📋 HWID copied to clipboard.',
-    'VI': '📋 Đã sao chép mã máy.',
-    'CN': '📋 已复制到剪贴板。',
+    'EN': 'HWID copied to clipboard.',
+    'VI': 'Đã sao chép mã máy.',
+    'CN': '已复制到剪贴板。',
   },
   'lic_clip_empty': {
     'EN': 'Clipboard is empty.',
@@ -231,9 +264,9 @@ const Map<String, Map<String, String>> _strings = {
     'CN': '剪贴板为空。',
   },
   'lic_syncing': {
-    'EN': '🔄 Connecting to server…',
-    'VI': '🔄 Đang kết nối server…',
-    'CN': '🔄 正在连接服务器…',
+    'EN': 'Connecting to server…',
+    'VI': 'Đang kết nối server…',
+    'CN': '正在连接服务器…',
   },
   'lic_sync_ok': {
     'EN': '✅  Synced successfully from LAN server.',
@@ -626,11 +659,7 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Sẵn sàng ({fh})',
     'CN': '就绪 ({fh})',
   },
-  'fw_missing_files': {
-    'EN': 'Missing',
-    'VI': 'Thiếu',
-    'CN': '缺少',
-  },
+  'fw_missing_files': {'EN': 'Missing', 'VI': 'Thiếu', 'CN': '缺少'},
   'fw_files_count': {
     'EN': '{xml} XML files',
     'VI': '{xml} file XML',
@@ -658,11 +687,7 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'BẢNG THEO DÕI LOG TERMINAL',
     'CN': '终端日志监控',
   },
-  'log_lines_count': {
-    'EN': 'LINES',
-    'VI': 'DÒNG',
-    'CN': '行',
-  },
+  'log_lines_count': {'EN': 'LINES', 'VI': 'DÒNG', 'CN': '行'},
 
   // Tooltips
   'tooltip_change_lang': {
@@ -680,21 +705,9 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Chuyển sang Giao diện Tối',
     'CN': '切换至深色模式',
   },
-  'theme_light': {
-    'EN': 'Light Theme',
-    'VI': 'Giao diện Sáng',
-    'CN': '浅色模式',
-  },
-  'theme_dark': {
-    'EN': 'Dark Theme',
-    'VI': 'Giao diện Tối',
-    'CN': '深色模式',
-  },
-  'settings_btn_label': {
-    'EN': 'Settings',
-    'VI': 'Cài đặt',
-    'CN': '设置',
-  },
+  'theme_light': {'EN': 'Light Theme', 'VI': 'Giao diện Sáng', 'CN': '浅色模式'},
+  'theme_dark': {'EN': 'Dark Theme', 'VI': 'Giao diện Tối', 'CN': '深色模式'},
+  'settings_btn_label': {'EN': 'Settings', 'VI': 'Cài đặt', 'CN': '设置'},
   'tooltip_rename_slot': {
     'EN': 'Rename Slot {slot}',
     'VI': 'Đặt tên cho Slot {slot}',
@@ -732,16 +745,8 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Loại Slot & Màu nhận diện:',
     'CN': '插槽类型与识别颜色:',
   },
-  'confirm': {
-    'EN': 'Confirm',
-    'VI': 'Xác nhận',
-    'CN': '确认',
-  },
-  'cancel': {
-    'EN': 'Cancel',
-    'VI': 'Hủy',
-    'CN': '取消',
-  },
+  'confirm': {'EN': 'Confirm', 'VI': 'Xác nhận', 'CN': '确认'},
+  'cancel': {'EN': 'Cancel', 'VI': 'Hủy', 'CN': '取消'},
   'save_slot_name': {
     'EN': 'Save Slot Name',
     'VI': 'Lưu tên Slot',
@@ -764,51 +769,23 @@ const Map<String, Map<String, String>> _strings = {
   },
 
   // Device card status and buttons
-  'card_flashing': {
-    'EN': 'Flashing',
-    'VI': 'Đang nạp',
-    'CN': '正在刷机',
-  },
-  'card_completed': {
-    'EN': 'Completed',
-    'VI': 'Hoàn tất',
-    'CN': '完成',
-  },
-  'card_failed': {
-    'EN': 'Failed',
-    'VI': 'Thất bại',
-    'CN': '失败',
-  },
-  'card_aborted': {
-    'EN': 'Aborted',
-    'VI': 'Đã dừng',
-    'CN': '已中止',
-  },
+  'card_flashing': {'EN': 'Flashing', 'VI': 'Đang nạp', 'CN': '正在刷机'},
+  'card_completed': {'EN': 'Completed', 'VI': 'Hoàn tất', 'CN': '完成'},
+  'card_failed': {'EN': 'Failed', 'VI': 'Thất bại', 'CN': '失败'},
+  'card_aborted': {'EN': 'Aborted', 'VI': 'Đã dừng', 'CN': '已中止'},
   'card_rebooting': {
     'EN': 'Rebooting…',
     'VI': 'Đang khởi động…',
     'CN': '正在重启…',
   },
-  'card_edl_ready': {
-    'EN': 'EDL Ready',
-    'VI': 'EDL Sẵn sàng',
-    'CN': 'EDL就绪',
-  },
+  'card_edl_ready': {'EN': 'EDL Ready', 'VI': 'EDL Sẵn sàng', 'CN': 'EDL就绪'},
   'card_waiting_cmd': {
     'EN': 'Waiting for flash command…',
     'VI': 'Chờ lệnh nạp firmware…',
     'CN': '等待刷机指令…',
   },
-  'card_flash_btn': {
-    'EN': 'Flash',
-    'VI': 'Flash',
-    'CN': '刷机',
-  },
-  'card_abort_btn': {
-    'EN': 'Abort',
-    'VI': 'Dừng',
-    'CN': '中止',
-  },
+  'card_flash_btn': {'EN': 'Flash', 'VI': 'Flash', 'CN': '刷机'},
+  'card_abort_btn': {'EN': 'Abort', 'VI': 'Dừng', 'CN': '中止'},
   'card_reboot_adb_btn': {
     'EN': 'Reboot ADB',
     'VI': 'Reboot ADB',
@@ -821,11 +798,7 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Fastboot Sẵn sàng',
     'CN': 'Fastboot就绪',
   },
-  'adb_connected': {
-    'EN': 'Connected',
-    'VI': 'Đã kết nối',
-    'CN': '已连接',
-  },
+  'adb_connected': {'EN': 'Connected', 'VI': 'Đã kết nối', 'CN': '已连接'},
   'adb_switched_edl': {
     'EN': 'Switched to EDL',
     'VI': 'Đã chuyển EDL',
@@ -860,41 +833,17 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Cài đặt hệ thống',
     'CN': '系统设置',
   },
-  'settings_tooltip': {
-    'EN': 'Settings',
-    'VI': 'Cài đặt',
-    'CN': '设置',
-  },
-  'tab_glass': {
-    'EN': 'Glass & UI',
-    'VI': 'Kính mờ & UI',
-    'CN': '毛玻璃与UI',
-  },
-  'tab_guide': {
-    'EN': 'User Guide',
-    'VI': 'Hướng dẫn',
-    'CN': '使用指南',
-  },
-  'tab_about': {
-    'EN': 'About',
-    'VI': 'Thông tin',
-    'CN': '关于软件',
-  },
-  'tab_license': {
-    'EN': 'License',
-    'VI': 'Bản quyền',
-    'CN': '软件授权',
-  },
+  'settings_tooltip': {'EN': 'Settings', 'VI': 'Cài đặt', 'CN': '设置'},
+  'tab_glass': {'EN': 'Glass & UI', 'VI': 'Kính mờ & UI', 'CN': '毛玻璃与UI'},
+  'tab_guide': {'EN': 'User Guide', 'VI': 'Hướng dẫn', 'CN': '使用指南'},
+  'tab_about': {'EN': 'About', 'VI': 'Thông tin', 'CN': '关于软件'},
+  'tab_license': {'EN': 'License', 'VI': 'Bản quyền', 'CN': '软件授权'},
   'settings_glass_header': {
     'EN': 'Glassmorphism & Visual Tuning',
     'VI': 'Tùy chỉnh Kính mờ & Hiệu ứng',
     'CN': '毛玻璃特效微调',
   },
-  'settings_default': {
-    'EN': 'Default',
-    'VI': 'Mặc định',
-    'CN': '恢复默认',
-  },
+  'settings_default': {'EN': 'Default', 'VI': 'Mặc định', 'CN': '恢复默认'},
   'settings_card_blur': {
     'EN': 'Bento Card Blur',
     'VI': 'Độ mờ thẻ Bento (Card Blur)',
@@ -953,8 +902,7 @@ const Map<String, Map<String, String>> _strings = {
         'When ON: System detects ADB/Fastboot -> auto reboots to EDL 9008 -> triggers firmware flash -> reboots device to ADB upon completion.',
     'VI':
         'Khi Bật: App tự động phát hiện thiết bị ADB/Fastboot -> tự reboot sang EDL 9008 -> tự động nạp slot đang chọn -> tự khởi động lại sau khi hoàn tất.',
-    'CN':
-        '开启时：自动检测ADB/Fastboot设备并重启到EDL 9008 -> 自动刷入当前插槽固件 -> 完成后自动重启。',
+    'CN': '开启时：自动检测ADB/Fastboot设备并重启到EDL 9008 -> 自动刷入当前插槽固件 -> 完成后自动重启。',
   },
   'guide_slots_title': {
     'EN': '3. Managing 3 Firmware Slots & Path Marquee',
@@ -979,8 +927,7 @@ const Map<String, Map<String, String>> _strings = {
         'Click Scan Now to refresh COM ports. If device gets stuck in Fastboot, use "Boot to EDL". The Terminal log monitor allows 1-click clipboard copying.',
     'VI':
         'Nhấn Quét ngay (Scan) để quét lại cổng COM. Nếu thiết bị kẹt ở Fastboot, dùng nút "Boot sang EDL". Bảng Terminal cho phép sao chép log nhanh chỉ bằng 1 cú nhấp chuột.',
-    'CN':
-        '点击立即扫描刷新COM端口。若设备卡在Fastboot，使用“启动到EDL”。终端监控支持一键复制日志。',
+    'CN': '点击立即扫描刷新COM端口。若设备卡在Fastboot，使用“启动到EDL”。终端监控支持一键复制日志。',
   },
   'guide_glass_title': {
     'EN': '5. Bento Glassmorphism & Performance Profiling',
@@ -1073,11 +1020,7 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Kích hoạt bằng Mã Bản Quyền:',
     'CN': '通过授权密钥激活:',
   },
-  'lic_paste_btn': {
-    'EN': 'Paste',
-    'VI': 'Dán',
-    'CN': '粘贴',
-  },
+  'lic_paste_btn': {'EN': 'Paste', 'VI': 'Dán', 'CN': '粘贴'},
   'lic_activate_now_btn': {
     'EN': 'Activate Now',
     'VI': 'Kích hoạt ngay',
@@ -1088,11 +1031,7 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Nhập hoặc dán mã license key vào đây…',
     'CN': '在此输入或粘贴授权密钥…',
   },
-  'action_close': {
-    'EN': 'Close',
-    'VI': 'Đóng',
-    'CN': '关闭',
-  },
+  'action_close': {'EN': 'Close', 'VI': 'Đóng', 'CN': '关闭'},
   'action_save_settings': {
     'EN': 'Save Settings',
     'VI': 'Lưu cài đặt',
@@ -1113,16 +1052,8 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Thu nhỏ',
     'CN': '已折叠',
   },
-  'terminal_height_compact': {
-    'EN': 'Compact',
-    'VI': 'Tiêu chuẩn',
-    'CN': '标准',
-  },
-  'terminal_height_expanded': {
-    'EN': 'Expanded',
-    'VI': 'Mở rộng',
-    'CN': '已展开',
-  },
+  'terminal_height_compact': {'EN': 'Compact', 'VI': 'Tiêu chuẩn', 'CN': '标准'},
+  'terminal_height_expanded': {'EN': 'Expanded', 'VI': 'Mở rộng', 'CN': '已展开'},
 
   // Hardware & Performance Tier Profiling
   'perf_tooltip': {
@@ -1136,8 +1067,10 @@ const Map<String, Map<String, String>> _strings = {
     'CN': '硬件自动识别与图形性能档位',
   },
   'perf_tier_sub': {
-    'EN': 'System dynamically detects hardware specs and optimizes glass rendering',
-    'VI': 'Hệ thống tự động phát hiện phần cứng và tối ưu hóa bộ render kính mờ',
+    'EN':
+        'System dynamically detects hardware specs and optimizes glass rendering',
+    'VI':
+        'Hệ thống tự động phát hiện phần cứng và tối ưu hóa bộ render kính mờ',
     'CN': '系统动态检测硬件规格并针对性优化毛玻璃渲染',
   },
   'perf_mode_label': {
@@ -1145,26 +1078,10 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Chế độ cấu hình:',
     'CN': '配置模式:',
   },
-  'perf_auto': {
-    'EN': 'Auto',
-    'VI': 'Tự động',
-    'CN': '自动',
-  },
-  'perf_ultra': {
-    'EN': 'Ultra',
-    'VI': 'Ultra',
-    'CN': '极速',
-  },
-  'perf_balanced': {
-    'EN': 'Balanced',
-    'VI': 'Cân bằng',
-    'CN': '均衡',
-  },
-  'perf_lite': {
-    'EN': 'Lite',
-    'VI': 'Tiết kiệm',
-    'CN': '轻量',
-  },
+  'perf_auto': {'EN': 'Auto', 'VI': 'Tự động', 'CN': '自动'},
+  'perf_ultra': {'EN': 'Ultra', 'VI': 'Ultra', 'CN': '极速'},
+  'perf_balanced': {'EN': 'Balanced', 'VI': 'Cân bằng', 'CN': '均衡'},
+  'perf_lite': {'EN': 'Lite', 'VI': 'Tiết kiệm', 'CN': '轻量'},
   'perf_detected_label': {
     'EN': 'Detected Hardware:',
     'VI': 'Cấu hình phát hiện:',
@@ -1181,23 +1098,179 @@ const Map<String, Map<String, String>> _strings = {
     'CN': 'CPU核心:',
   },
   'perf_desc_auto': {
-    'EN': 'Auto: Continuously optimizes graphics pipeline to match your computer specs for maximum responsiveness.',
-    'VI': 'Tự động: Tự động phân tích cấu hình máy và điều chỉnh bộ xử lý đồ họa để app luôn mượt mà nhất.',
+    'EN':
+        'Auto: Continuously optimizes graphics pipeline to match your computer specs for maximum responsiveness.',
+    'VI':
+        'Tự động: Tự động phân tích cấu hình máy và điều chỉnh bộ xử lý đồ họa để app luôn mượt mà nhất.',
     'CN': '自动: 持续分析系统性能并动态调整渲染管线，确保界面始终丝滑顺畅。',
   },
   'perf_desc_ultra': {
-    'EN': 'Ultra: 120 FPS high-end profile with full 20px blur and floating glowing particles.',
-    'VI': 'Ultra: Cấu hình cao cấp 120 FPS với độ mờ kính 20px đầy đủ và hiệu ứng hạt phát sáng.',
+    'EN':
+        'Ultra: 120 FPS high-end profile with full 20px blur and floating glowing particles.',
+    'VI':
+        'Ultra: Cấu hình cao cấp 120 FPS với độ mờ kính 20px đầy đủ và hiệu ứng hạt phát sáng.',
     'CN': '极速: 120 FPS顶级配置，提供完整20px毛玻璃虚化与漂浮发光粒子效果。',
   },
   'perf_desc_balanced': {
-    'EN': 'Balanced: 60 FPS smooth glassmorphism with optimized 14px blur for laptops and office PCs.',
-    'VI': 'Cân bằng: Hiệu ứng kính mờ 60 FPS mượt mà với độ mờ 14px tối ưu cho laptop và máy văn phòng.',
+    'EN':
+        'Balanced: 60 FPS smooth glassmorphism with optimized 14px blur for laptops and office PCs.',
+    'VI':
+        'Cân bằng: Hiệu ứng kính mờ 60 FPS mượt mà với độ mờ 14px tối ưu cho laptop và máy văn phòng.',
     'CN': '均衡: 60 FPS流畅毛玻璃，优化14px虚化深度，专为现代笔记本与办公电脑设计。',
   },
   'perf_desc_lite': {
-    'EN': 'Lite: High-speed acrylic interface with zero blur overhead for older laptops, low-spec CPUs, or VMs.',
-    'VI': 'Tiết kiệm: Giao diện Acrylic siêu nhẹ loại bỏ hoàn toàn độ trễ cho laptop cũ, CPU yếu hoặc máy ảo.',
+    'EN':
+        'Lite: High-speed acrylic interface with zero blur overhead for older laptops, low-spec CPUs, or VMs.',
+    'VI':
+        'Tiết kiệm: Giao diện Acrylic siêu nhẹ loại bỏ hoàn toàn độ trễ cho laptop cũ, CPU yếu hoặc máy ảo.',
     'CN': '轻量: 极速亚克力界面，无虚化开销，适用于老旧电脑、低配CPU或虚拟机。',
   },
+
+  // LAN OTA Update
+  'tab_ota': {'EN': 'LAN OTA', 'VI': 'Cập nhật OTA', 'CN': '局域网OTA'},
+  'ota_current_version': {
+    'EN': 'Current Version',
+    'VI': 'Phiên bản hiện tại',
+    'CN': '当前版本',
+  },
+  'ota_latest_version': {
+    'EN': 'Latest Version',
+    'VI': 'Phiên bản mới nhất',
+    'CN': '最新版本',
+  },
+  'ota_last_check': {
+    'EN': 'Last Checked',
+    'VI': 'Lần kiểm tra gần nhất',
+    'CN': '最近检查',
+  },
+  'ota_never_checked': {
+    'EN': 'Never checked',
+    'VI': 'Chưa kiểm tra',
+    'CN': '从未检查',
+  },
+  'ota_check_now': {
+    'EN': 'Check Updates Now',
+    'VI': 'Kiểm tra cập nhật ngay',
+    'CN': '立即检查更新',
+  },
+  'ota_checking': {
+    'EN': 'Checking for updates...',
+    'VI': 'Đang kiểm tra...',
+    'CN': '正在检查更新...',
+  },
+  'ota_update_available': {
+    'EN': 'New update available: {0}',
+    'VI': 'Đã có phiên bản mới: {0}',
+    'CN': '发现新版本: {0}',
+  },
+  'ota_no_update': {
+    'EN': 'You are using the latest version ({0})',
+    'VI': 'Bạn đang dùng phiên bản mới nhất ({0})',
+    'CN': '当前已是最新版本 ({0})',
+  },
+  'ota_update_now': {'EN': 'Update Now', 'VI': 'Cập nhật ngay', 'CN': '立即更新'},
+  'ota_update_later': {'EN': 'Remind Me Later', 'VI': 'Để sau', 'CN': '稍后提醒'},
+  'ota_check_interval': {
+    'EN': 'Auto-Check Frequency',
+    'VI': 'Tần suất tự động kiểm tra',
+    'CN': '自动检查频率',
+  },
+  'ota_interval_daily': {
+    'EN': 'Daily at startup',
+    'VI': 'Mỗi ngày khi khởi động',
+    'CN': '每天启动时',
+  },
+  'ota_interval_weekly': {
+    'EN': 'Weekly (every 7 days)',
+    'VI': 'Hàng tuần (7 ngày)',
+    'CN': '每周 (每7天)',
+  },
+  'ota_interval_monthly': {
+    'EN': 'Monthly (every 30 days)',
+    'VI': 'Hàng tháng (30 ngày)',
+    'CN': '每月 (每30天)',
+  },
+  'ota_interval_off': {
+    'EN': 'Disabled (Manual check only)',
+    'VI': 'Tắt (Chỉ kiểm tra thủ công)',
+    'CN': '已关闭 (仅手动检查)',
+  },
+  'ota_server_path': {
+    'EN': 'LAN Server Update Path (SMB / UNC)',
+    'VI': 'Đường dẫn thư mục cập nhật mạng LAN (SMB / UNC)',
+    'CN': '局域网更新目录路径 (SMB / UNC)',
+  },
+  'ota_server_path_hint': {
+    'EN': r'e.g. \\10.81.141.226\temp\FBT\JA_PROJECT\JA_Update\JA_IQ5_Flash',
+    'VI': r'Ví dụ: \\10.81.141.226\temp\FBT\JA_PROJECT\JA_Update\JA_IQ5_Flash',
+    'CN': r'例如: \\10.81.141.226\temp\FBT\JA_PROJECT\JA_Update\JA_IQ5_Flash',
+  },
+  'ota_username': {
+    'EN': 'LAN Username (Domain/User if required)',
+    'VI': 'Tài khoản mạng LAN (User nếu cần)',
+    'CN': '局域网账号 (如需要)',
+  },
+  'ota_password': {
+    'EN': 'LAN Password',
+    'VI': 'Mật khẩu mạng LAN',
+    'CN': '局域网密码',
+  },
+  'ota_test_connection': {
+    'EN': 'Test Connection',
+    'VI': 'Thử kết nối máy chủ',
+    'CN': '测试连接',
+  },
+  'ota_testing_connection': {
+    'EN': 'Testing connection...',
+    'VI': 'Đang thử kết nối...',
+    'CN': '正在测试连接...',
+  },
+  'ota_connection_success': {
+    'EN': 'LAN server connection successful!',
+    'VI': 'Kết nối máy chủ LAN thành công!',
+    'CN': '局域网服务器连接成功!',
+  },
+  'ota_connection_failed': {
+    'EN': 'LAN server connection failed: {0}',
+    'VI': 'Kết nối máy chủ thất bại: {0}',
+    'CN': '连接失败: {0}',
+  },
+  'ota_open_config_dir': {
+    'EN': 'Open Config Folder',
+    'VI': 'Mở thư mục cấu hình',
+    'CN': '打开配置文件夹',
+  },
+  'ota_dialog_title': {
+    'EN': 'LAN Software Update',
+    'VI': 'Cập nhật phần mềm qua LAN',
+    'CN': '局域网软件更新',
+  },
+  'ota_package_size': {
+    'EN': 'Package Size',
+    'VI': 'Dung lượng gói',
+    'CN': '安装包大小',
+  },
+  'ota_release_notes': {
+    'EN': 'Release Notes',
+    'VI': 'Thông tin bản cập nhật',
+    'CN': '更新日志',
+  },
+  'ota_release_notes_fallback': {
+    'EN':
+        'This release includes performance improvements, new features, and stability fixes.',
+    'VI':
+        'Bản phát hành bao gồm các cải tiến hiệu năng, tính năng mới và các bản vá lỗi ổn định.',
+    'CN': '此版本包含性能优化、新功能和稳定性修复。',
+  },
+  'ota_downloading': {
+    'EN': 'Downloading update...',
+    'VI': 'Đang tải bản cập nhật...',
+    'CN': '正在下载更新...',
+  },
+  'ota_status_init': {
+    'EN': 'Initializing...',
+    'VI': 'Đang khởi tạo...',
+    'CN': '正在初始化...',
+  },
+  'close_dialog': {'EN': 'Close', 'VI': 'Đóng', 'CN': '关闭'},
 };

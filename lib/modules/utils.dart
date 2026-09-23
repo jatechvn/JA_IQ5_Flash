@@ -7,7 +7,6 @@ import 'package:ffi/ffi.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:win32/win32.dart';
 
-
 final _shell32 = DynamicLibrary.open('shell32.dll');
 final _isUserAnAdmin = _shell32
     .lookupFunction<Int32 Function(), int Function()>('IsUserAnAdmin');
@@ -95,15 +94,12 @@ Future<bool> stopQualcommService() async {
   if (!Platform.isWindows) return true;
   try {
     // Primary: Try using PowerShell which handles states and errors better
-    final psResult = await Process.run(
-      'powershell',
-      [
-        '-NoProfile',
-        '-Command',
-        'Stop-Service -Name qcmtusvc -Force -ErrorAction SilentlyContinue; '
-        'Get-Service -Name qcmtusvc -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Status'
-      ],
-    );
+    final psResult = await Process.run('powershell', [
+      '-NoProfile',
+      '-Command',
+      'Stop-Service -Name qcmtusvc -Force -ErrorAction SilentlyContinue; '
+          'Get-Service -Name qcmtusvc -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Status',
+    ]);
     final psOutput = psResult.stdout.toString().trim();
     if (psOutput.isEmpty || psOutput == 'Stopped') {
       return true; // Service doesn't exist or is stopped
@@ -149,7 +145,6 @@ double clamp(double value, double lower, double upper) {
   return value;
 }
 
-
 /// Opens modern Windows Explorer Folder Dialog with address bar, search, and quick access.
 Future<String?> selectDirectory({
   String? initialDirectory,
@@ -158,7 +153,8 @@ Future<String?> selectDirectory({
   try {
     final selected = await FilePicker.getDirectoryPath(
       dialogTitle: dialogTitle ?? 'Select Firmware Directory',
-      initialDirectory: (initialDirectory != null &&
+      initialDirectory:
+          (initialDirectory != null &&
               initialDirectory.isNotEmpty &&
               Directory(initialDirectory).existsSync())
           ? initialDirectory

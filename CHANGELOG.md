@@ -4,6 +4,30 @@ All notable changes to **JA IQ5 Reflash** will be documented in this file.
 
 ---
 
+## [v1.3.0] - 2026-09-23
+
+### 🚀 Major Features & Enhancements
+- **🔄 Complete LAN Over-The-Air (OTA) Update System (LAN Messenger Standard):**
+  - **Core Service (`OtaUpdateService`)**: Full Semantic Versioning (`SemanticVersion`) comparison, Windows UNC/SMB (`net use`) authenticated connection, Zip-Slip archive security validation, and detached robocopy script generation with automated rollback.
+  - **Independent Portable Config (`update_config.json`)**: Stored next to executable (or `%APPDATA%\JA_IQ5_Flash`) for zero-touch portable deployment.
+  - **Bento Frosted Glass Update Modal (`GlassUpdateDialog`)**: Interactive dialog featuring current vs latest version cards, package size, release notes viewer, dynamic progress % bar, and step-by-step status tracking.
+  - **5th Settings Tab ("LAN OTA")**: Dedicated configuration tab in `SettingsDialog` allowing users to configure check interval (*Daily*, *Weekly*, *Monthly*, *Off*), SMB server path, credentials with password visibility toggle, 1-click server connection testing, and direct config directory access.
+  - **Top Bar Update Pill Badge**: Dynamic emerald expanding pill button in the top menu bar showing `v{newVersion}` and expanding to `Update Now` on hover; triggers background check on startup.
+- **📦 Standard Zero-Dependency Windows Installer & Uninstaller (`install.bat`, `uninstall.bat`, `uninstall.ps1`):**
+  - **User-space Zero-UAC Installation**: Installs to `%LOCALAPPDATA%\Programs\JA_IQ5_Flash` without requiring Administrator privileges.
+  - **Data & Config Preservation**: Preserves `config.json`, `config.ini`, `update_config.json`, `license.key`, and logs during upgrades via Robocopy `/XF` / `/XD` filters.
+  - **Full Windows Integration**: Automatically creates Desktop shortcut, Start Menu folder with app and uninstaller shortcuts (`shell32.dll,-240`), and registers into Windows Control Panel / Settings.
+  - **Self-Deleting Staging Driver**: `uninstall.bat` stages execution to `%TEMP%` to avoid Windows batch file locking.
+- **🌐 Trilingual Localization Expansion:**
+  - Full translation coverage for all OTA features across English, Tiếng Việt, and 中文.
+  - Upgraded `tr(key, [args])` to support safe parameter replacement (`{0}`, `{1}`) with 100% backward compatibility.
+
+### 🐛 Bug Fixes & Polishing
+- **Fixed Duplicated Action Icons**: Cleaned up toolbar button definitions eliminating duplicate icon artifacts on EDL and ADB action buttons.
+- **Test Suite Expansion**: Added comprehensive `ota_update_service_test.dart` suite, achieving 100% green coverage (60/60 tests passing).
+
+---
+
 ## [v1.2.1] - 2026-09-12
 
 ### 🚀 Major Features & Enhancements

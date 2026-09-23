@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.2.1-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.3.0-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
@@ -104,13 +104,19 @@
 
 ## ⚡ 快速入门指南
 
-### 方式 A: 运行独立免安装包 (推荐)
-1. 从 [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases) 页面下载最新发布包 `JA_IQ5_Flash_v1.2.1_Windows_x64.zip`。
+### 方式 A: 标准 Windows 安装 (推荐)
+1. 从 [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases) 页面下载最新发布包 `JA_IQ5_Flash_v1.3.0_Windows_x64.zip`。
+2. 解压安装包，双击运行 `install.bat` 即可完成一键免管理员权限安装。
+3. 应用程序将自动安装至 `%LOCALAPPDATA%\Programs\JA_IQ5_Flash`，并创建桌面与开始菜单快捷方式。
+4. 可随时通过 `uninstall.bat` 或 Windows 系统设置卸载。
+
+### 方式 B: 运行独立免安装包
+1. 从 [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases) 页面下载最新发布包 `JA_IQ5_Flash_v1.3.0_Windows_x64.zip`。
 2. 解压到任意本地目录（例如 `D:\Tools\JA_IQ5_Flash\`）。
 3. 双击运行 `ja_iq5_flash.exe`。
 4. 确保 Windows 系统已正确安装高通 QDLoader 9008 驱动以及 Android USB 驱动。
 
-### 方式 B: 从源码编译
+### 方式 C: 从源码编译
 运行环境要求:
 - Flutter SDK $\ge 3.22.0$ (Dart $\ge 3.4.0$)
 - Visual Studio 2022 并勾选“使用 C++ 的桌面开发”工作负载
@@ -139,6 +145,13 @@ build.bat
 
 完整历史记录请参阅 [CHANGELOG.md](../CHANGELOG.md)。
 
+- **v1.3.0 (2026-09-21)**:
+  - 完整接入局域网 OTA 自动在线更新体系 (`OtaUpdateService` + `update_config.json`)。
+  - 全新现代 Bento 毛玻璃更新对话框 (`GlassUpdateDialog`)，实时展示双版本对比、更新日志与下载百分比。
+  - 新增第 5 个独立设置分页（“局域网 OTA”），支持定制检查周期、SMB/UNC 目录路径、认证凭证、一键连接测试及打开配置文件目录。
+  - 顶部菜单栏集成更新药丸按钮及开机后台静默自检。
+  - 修复 EDL 与 ADB 工具栏操作按钮图标重复显示的问题。
+  - 拓展全套 57 项自动化测试并 100% 满分通过。
 - **v1.2.1 (2026-09-12)**:
   - Bento 卡片模糊度与不透明度滑块实现实时无缝响应预览（遵循 MES Tool 架构标准）。
   - 接入全局 `ChangeNotifierProvider` 架构，全面采用 `context.watch<AppTheme>()`。

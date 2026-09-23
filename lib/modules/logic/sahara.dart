@@ -377,8 +377,13 @@ Future<(bool, String)> _transferLoop(
     }
 
     // Diagnostic hex log for every received packet in the loop
-    final pktHex = pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
-    log('  [Sahara] DEBUG: Received packet hex (len=${pkt.length}): $pktHex', 'debug');
+    final pktHex = pkt
+        .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+        .join(' ');
+    log(
+      '  [Sahara] DEBUG: Received packet hex (len=${pkt.length}): $pktHex',
+      'debug',
+    );
 
     final view = ByteData.sublistView(pkt);
     final cmd = view.getUint32(0, Endian.little);
@@ -427,10 +432,16 @@ Future<(bool, String)> _transferLoop(
       final written = serial.write(chunk);
       serial.flush();
       if (written != chunk.length) {
-        log('  [Sahara] WARNING: Serial write mismatch: wrote $written of ${chunk.length} bytes!', 'warn');
+        log(
+          '  [Sahara] WARNING: Serial write mismatch: wrote $written of ${chunk.length} bytes!',
+          'warn',
+        );
       }
       if (dataOffset == 0) {
-        final hexStr = chunk.take(16).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ');
+        final hexStr = chunk
+            .take(16)
+            .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+            .join(' ');
         log('  [Sahara] DEBUG: First chunk header hex: $hexStr', 'debug');
       }
       bytesSent += dataLength;

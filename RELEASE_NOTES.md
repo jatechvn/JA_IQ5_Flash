@@ -1,23 +1,25 @@
-﻿TAG=v1.2.1
-TITLE=JA IQ5 Reflash v1.2.1 - Real-time Bento Glassmorphism Tuning & Rollback
+TAG=v1.3.0
+TITLE=JA IQ5 Reflash v1.3.0 - LAN Over-The-Air (OTA) Updates & UI Refinements
 BODY=
-# ⚡ JA IQ5 Reflash v1.2.1
+# ⚡ JA IQ5 Reflash v1.3.0
 
 ### 🚀 Major Enhancements & Bug Fixes
-- **🎛️ Real-Time Responsive Bento Glassmorphism Tuning (MES Tool Standard):**
-  - Integrated root-level `ChangeNotifierProvider` (`provider: ^6.1.2`) wrapping the entire application tree and modal dialog routes.
-  - Refactored `BentoCard` and `SubCard` to dynamically watch `AppTheme` via `context.watch<AppTheme>()` with reactive fallbacks.
-  - Live real-time preview of **Bento Card Blur** (0 - 40 px) and **Bento Card Opacity** (5% - 100%) while dragging sliders in the Settings dialog without requiring save or app restart.
-  - GPU optimization: automatically omits `BackdropFilter` when blur is 0 px (Lite mode), saving GPU cycles.
-- **🔄 Dynamic Surface Opacity Scaling:**
-  - Scaled slot card backgrounds, EDL and ADB column container surfaces, and sub-card headers proportionally according to the user's card opacity slider.
-- **↩️ Graceful Cancellation Rollback & Save Persistence:**
-  - Implemented initial glassmorphism state tracking and `_rollbackAndClose()` logic with `PopScope(canPop: false)` on `SettingsDialog` (matching `JA_MES_Tool`).
-  - Closing the modal, clicking `X`, or pressing Escape safely rolls back uncommitted slider changes; clicking Save Settings persists values to `config.ini`.
-- **📖 Expanded In-App User Guide:**
-  - Added dedicated Guide section for Bento Glassmorphism, hardware tier auto-profiling, and preview rollback across all 3 languages (English, Tiếng Việt, 中文).
-- **🧪 Comprehensive Automated Testing Suite:**
-  - Added `Live Glassmorphism Reactivity & Rollback Tests` group, bringing total coverage to 43 passing unit & widget tests (100% green).
+- **🔄 Complete LAN Over-The-Air (OTA) Update System (LAN Messenger Standard):**
+  - **Core Service (`OtaUpdateService`)**: Full Semantic Versioning (`SemanticVersion`) comparison, Windows UNC/SMB (`net use`) authenticated connection, Zip-Slip archive security validation, and detached robocopy script generation with automated rollback.
+  - **Independent Portable Config (`update_config.json`)**: Stored next to executable (or `%APPDATA%\JA_IQ5_Flash`) for zero-touch portable deployment.
+  - **Bento Frosted Glass Update Modal (`GlassUpdateDialog`)**: Interactive dialog featuring current vs latest version cards, package size, release notes viewer, dynamic progress % bar, and step-by-step status tracking.
+  - **5th Settings Tab ("LAN OTA")**: Dedicated configuration tab in `SettingsDialog` allowing users to configure check interval (*Daily*, *Weekly*, *Monthly*, *Off*), SMB server path, credentials with password visibility toggle, 1-click server connection testing, and direct config directory access.
+  - **Top Bar Update Pill Badge**: Dynamic emerald expanding pill button in the top menu bar showing `v{newVersion}` and expanding to `Update Now` on hover; triggers background check on startup.
+- **📦 Standard Zero-Dependency Windows Installer & Uninstaller (`install.bat`, `uninstall.bat`, `uninstall.ps1`):**
+  - Installs to `%LOCALAPPDATA%\Programs\JA_IQ5_Flash` without requiring Administrator privileges.
+  - Preserves user configurations (`config.json`, `config.ini`, `update_config.json`, `license.key`) and logs during updates.
+  - Creates Desktop shortcut, Start Menu folder with app and uninstaller (`shell32.dll,-240`), and registers into Windows Settings & Control Panel.
+- **🌐 Trilingual Localization Expansion:**
+  - Full translation coverage for all OTA features across English, Tiếng Việt, and 中文.
+  - Upgraded `tr(key, [args])` to support safe parameter replacement (`{0}`, `{1}`) with 100% backward compatibility.
+- **🐛 Fixed Duplicated Action Icons**: Cleaned up toolbar button definitions eliminating duplicate icon artifacts on EDL and ADB action buttons.
+- **🧪 Comprehensive Automated Testing Suite**: Added `ota_update_service_test.dart` suite, achieving 100% green coverage (60/60 tests passing).
 
 ### 📦 Artifacts Included
-- `JA_IQ5_Flash_v1.2.1_Windows_x64.zip`: Standalone portable bundle with embedded Qualcomm EDL binaries (`fh_loader.exe`, `QMSL_MSVC10R.dll`), icons, documentation, and debug scripts.
+- `JA_IQ5_Flash_v1.3.0_Windows_x64.zip`: Standalone portable bundle with embedded Qualcomm EDL binaries (`fh_loader.exe`, `QMSL_MSVC10R.dll`), 1-click Windows installer/uninstaller, icons, documentation, and debug scripts.
+

@@ -229,7 +229,9 @@ class AppTheme extends ChangeNotifier {
     if (dialogBlur != null) _dialogBlur = dialogBlur.clamp(0.0, 40.0);
     if (dialogOpacity != null) _dialogOpacity = dialogOpacity.clamp(0.1, 1.0);
     if (enableMeshOrbs != null) _enableMeshOrbs = enableMeshOrbs;
-    if (meshOrbOpacity != null) _meshOrbOpacity = meshOrbOpacity.clamp(0.05, 0.60);
+    if (meshOrbOpacity != null) {
+      _meshOrbOpacity = meshOrbOpacity.clamp(0.05, 0.60);
+    }
     if (notify) notifyListeners();
   }
 
@@ -268,7 +270,8 @@ class AppTheme extends ChangeNotifier {
   Color get scaffoldBg => colors.bgPrimary;
   Color get surfaceBg => colors.headerBg;
   Color get cardBg => colors.cardBg;
-  Color get cardBgSolid => isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+  Color get cardBgSolid =>
+      isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
   Color get textPrimary => colors.textPrimary;
   Color get textSecondary => colors.textSecondary;
   Color get borderTheme => colors.borderDefault;
@@ -290,9 +293,7 @@ class AppTheme extends ChangeNotifier {
       scaffoldBackgroundColor: Colors.transparent,
       cardColor: colors.cardBg,
       fontFamily: 'Outfit',
-      dialogTheme: DialogThemeData(
-        backgroundColor: colors.headerBg,
-      ),
+      dialogTheme: DialogThemeData(backgroundColor: colors.headerBg),
       dividerColor: colors.borderDefault,
       iconTheme: IconThemeData(color: colors.textPrimary),
       textTheme: TextTheme(

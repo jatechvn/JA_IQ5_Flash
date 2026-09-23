@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.2.1-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.3.0-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
@@ -153,13 +153,19 @@ JA_IQ5_Flash/
 
 ## ⚡ Quick Start Guide
 
-### Option A: Portable Run (Recommended)
-1. Download the latest release package `JA_IQ5_Flash_v1.2.1_Windows_x64.zip` from [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases).
+### Option A: Standard Windows Installation (Recommended)
+1. Download `JA_IQ5_Flash_v1.3.0_Windows_x64.zip` from [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases).
+2. Extract the package, right-click `install.bat` and run it (no Administrator rights required).
+3. The app is installed into `%LOCALAPPDATA%\Programs\JA_IQ5_Flash` with Desktop & Start Menu shortcuts.
+4. To uninstall, run `uninstall.bat` or remove via Windows Settings → Installed apps.
+
+### Option B: Portable Run
+1. Download the latest release package `JA_IQ5_Flash_v1.3.0_Windows_x64.zip` from [Releases](https://github.com/jatechvn/JA_IQ5_Flash/releases).
 2. Extract the ZIP package to any directory (e.g. `D:\Tools\JA_IQ5_Flash\`).
 3. Run `ja_iq5_flash.exe`.
 4. Ensure your Qualcomm QDLoader 9008 drivers and Android USB drivers are installed on Windows.
 
-### Option B: Building from Source
+### Option C: Building from Source
 Prerequisites:
 - Flutter SDK $\ge 3.22.0$ (Dart $\ge 3.4.0$)
 - Visual Studio 2022 with "Desktop development with C++"
@@ -217,6 +223,13 @@ mesh_orb_opacity = 0.24
 
 See full release history and notes in [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.3.0 (2026-09-21)**:
+  - Complete LAN Over-The-Air (OTA) Update System (`OtaUpdateService` + `update_config.json`).
+  - Interactive Bento Frosted Glass Update Modal (`GlassUpdateDialog`) with release notes and progress.
+  - Dedicated 5th Settings Tab ("LAN OTA") with SMB server path, credentials, interval, test connection, and config folder launcher.
+  - Top Bar update pill badge with hover expand and background startup auto-check.
+  - Fixed duplicated action icons on EDL and ADB toolbar buttons.
+  - 57 passing automated unit & widget tests (100% green).
 - **v1.2.1 (2026-09-12)**:
   - Real-time live responsiveness for Bento Card Blur & Opacity sliders (MES Tool Standard).
   - Global `ChangeNotifierProvider` architecture with reactive `context.watch<AppTheme>()`.
