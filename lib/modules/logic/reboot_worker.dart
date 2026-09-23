@@ -1,31 +1,46 @@
 // lib/modules/logic/reboot_worker.dart
-import 'dart:convert';
+import 'dart:isolate';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../constants.dart';
 import '../i18n.dart';
-import '../utils.dart';
+import 'operation_support.dart';
+import 'flash_isolate.dart';
 import 'sahara.dart';
 
 class RebootWorker {
   final String port;
   final String fwDir;
-  Process? _process;
+  ManagedProcess? _process;
+  SaharaIsolateHandle? _sahara;
+  bool resetting = false;
   bool _aborted = false;
 
   RebootWorker({required this.port, required this.fwDir});
 
   void abort() {
     _aborted = true;
-    _process?.kill();
+    _process?.abort();
+    _sahara?.abort();
   }
 
   /// Run the reboot sequence.
   Future<(bool, String)> run({
     void Function(String msg, String level)? onLog,
   }) async {
-    _aborted = false;
+    return DeviceOperationQueue.shared.run(() async {
+      if (_aborted) return (false, 'Aborted');
+      try {
+        return await withQualcommService(() => _run(onLog: onLog));
+      } catch (error) {
+        return (false, 'Reboot failed: $error');
+      }
+    });
+  }
+
+  Future<(bool, String)> _run({void Function(String, String)? onLog}) async {
+    if (_aborted) return (false, 'Aborted');
     final logsDir = Directory(p.join(baseDir, 'logs'));
     if (!logsDir.existsSync()) logsDir.createSync(recursive: true);
 
@@ -52,13 +67,10 @@ class RebootWorker {
       return await _pathB(log);
     }
 
-    // Stop service
-    await stopQualcommService();
-
     if (_aborted) return (false, 'Aborted');
 
     // Upload firehose programmer
-    final (saharaOk, saharaMsg) = await saharaUploadProgrammer(
+    final (saharaOk, saharaMsg) = await (_sahara = SaharaIsolateHandle()).run(
       port: port,
       elfPath: elfPath,
       onLog: (m, l) => log('  [Sahara] $m', l),
@@ -78,7 +90,10 @@ class RebootWorker {
     await Future.delayed(const Duration(seconds: 2));
     if (_aborted) return (false, 'Aborted');
 
-    final portTracePath = p.join(logsDir.path, 'reboot_trace_$port.txt');
+    final portTracePath = p.join(
+      logsDir.path,
+      'reboot_trace_${port}_${DateTime.now().microsecondsSinceEpoch}.txt',
+    );
     final fwAbs = Directory(fwDir).absolute.path;
     final args = [
       '--port=\\\\.\\$port',
@@ -93,40 +108,18 @@ class RebootWorker {
     ];
 
     try {
-      _process = await Process.start(
+      resetting = true;
+      final process = ManagedProcess();
+      _process = process;
+      final exitCode = await process.run(
         fhLoaderExePath,
         args,
         workingDirectory: fwAbs,
+        idleTimeout: const Duration(minutes: 2),
+        totalTimeout: const Duration(minutes: 5),
+        onLine: (line, isError) =>
+            log('  [fh] $line', isError ? 'error' : 'info'),
       );
-      if (_aborted) _process!.kill();
-      final stderrDone = _process!.stderr
-          .transform(const Utf8Decoder(allowMalformed: true))
-          .transform(const LineSplitter())
-          .forEach((line) {
-            if (!_aborted && line.trim().isNotEmpty) {
-              log('  [fh] $line', 'error');
-            }
-          });
-
-      final stdoutStream = _process!.stdout
-          .transform(const Utf8Decoder(allowMalformed: true))
-          .transform(const LineSplitter());
-
-      await for (var line in stdoutStream) {
-        if (_aborted) break;
-        line = line.trim();
-        if (line.isEmpty) continue;
-
-        final level =
-            line.toLowerCase().contains('error') ||
-                line.toLowerCase().contains('fail')
-            ? 'error'
-            : 'info';
-        log('  [fh] $line', level);
-      }
-
-      final exitCode = await _process!.exitCode;
-      await stderrDone;
       _process = null;
       if (_aborted) return (false, 'Aborted');
 
@@ -152,7 +145,12 @@ class RebootWorker {
   ) async {
     if (_aborted) return (false, 'Aborted');
     log(tr('log_reboot_path_b'), 'warn');
-    final (ok, msg) = await saharaResetPort(port);
+    resetting = true;
+    final targetPort = port;
+    final (ok, msg) = await Isolate.run(
+      () => saharaResetPort(targetPort, manageService: false),
+    );
+    if (_aborted) return (false, 'Aborted');
     if (ok) {
       log(tr('log_reboot_reset_ok'), 'success');
       return (true, tr('log_reboot_sahara_success').replaceAll('{port}', port));

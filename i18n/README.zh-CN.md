@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.3.0-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.3.1-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">

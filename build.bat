@@ -1,118 +1,116 @@
 @echo off
-setlocal enabledelayedexpansion
-title Build JA IQ5 Reflash - Release Packager
-
-echo =======================================================================
-echo                 JA IQ5 REFLASH - BUILD AND PACKAGER
-echo =======================================================================
+setlocal EnableExtensions DisableDelayedExpansion
+cd /d "%~dp0"
+if errorlevel 1 (
+    echo [ERROR] Khong the mo thu muc du an.
+    if /i not "%~1"=="--no-pause" pause
+    exit /b 1
+)
+title Build JA IQ5 Flash (Release)
+echo ========================================================
+echo   BUILD JA IQ5 FLASH - RELEASE WINDOWS DESKTOP
+echo ========================================================
 echo.
 
-set WORKSPACE_DIR=%~dp0
-cd /d "%WORKSPACE_DIR%"
-
-:: Read app version from pubspec.yaml so release naming never drifts out of sync
-for /f "tokens=2 delims= " %%v in ('findstr /b "version:" pubspec.yaml') do set PUBSPEC_VERSION=%%v
-for /f "tokens=1 delims=+" %%v in ("%PUBSPEC_VERSION%") do set APP_VERSION=%%v
-if "%APP_VERSION%"=="" set APP_VERSION=1.3.0
-echo Detected app version: v%APP_VERSION%
-echo.
-
-:: 0. Kill running instances of the app
-echo [0/5] Terminating any active ja_iq5_flash.exe instances...
+:: 1. Dong tien trinh dang chay neu co de tranh loi khoa file
+echo [1/6] Kiem tra va dong tien trinh cu dang chay neu co...
 taskkill /IM ja_iq5_flash.exe /F 2>nul
-ping 127.0.0.1 -n 2 >nul
-echo.
 
-:: 1. Clean up old dist folder
-echo [1/5] Clearing previous distribution folder...
-if exist "dist" (
-    rmdir /s /q "dist"
-)
-mkdir "dist"
-echo.
-
-:: 2. Build Windows App in Release mode
-echo [2/5] Compiling Windows application (Release mode)...
+:: 2. Bien dich ung dung o che do Release
+echo [2/6] Bien dich ung dung Flutter Windows Desktop (Release mode)...
 call flutter build windows --release
-
-if %ERRORLEVEL% neq 0 (
+set "BUILD_EXIT_CODE=%ERRORLEVEL%"
+if not "%BUILD_EXIT_CODE%"=="0" (
     echo.
-    echo [WARN] Initial build failed, attempting cache cleanup and retry...
-    if exist "build\windows\x64\CMakeCache.txt" del /f /q "build\windows\x64\CMakeCache.txt"
-    if exist "windows\flutter\ephemeral" rmdir /s /q "windows\flutter\ephemeral"
-    call flutter build windows --release
+    echo ========================================================
+    echo   [ERROR] Build that bai! Vui long kiem tra loi o tren.
+    echo ========================================================
+    if /i not "%~1"=="--no-pause" pause
+    exit /b %BUILD_EXIT_CODE%
 )
 
-if %ERRORLEVEL% neq 0 (
-    echo.
-    echo [ERROR] Flutter build failed with error code %ERRORLEVEL%!
-    pause
-    exit /b %ERRORLEVEL%
+set "TARGET_DIR=%~dp0build\windows\x64\runner\Release"
+if not exist "%TARGET_DIR%\" (
+    echo [ERROR] Khong tim thay thu muc Release: %TARGET_DIR%
+    if /i not "%~1"=="--no-pause" pause
+    exit /b 1
 )
 
-set RELEASE_DIR=build\windows\x64\runner\Release
-
-:: Remove old runtime data left behind by any previous run
-if exist "%RELEASE_DIR%\config.json" del /f /q "%RELEASE_DIR%\config.json"
-if exist "%RELEASE_DIR%\config.ini" del /f /q "%RELEASE_DIR%\config.ini"
-if exist "%RELEASE_DIR%\logs" rmdir /s /q "%RELEASE_DIR%\logs"
-
-echo.
-:: 3. Copy bin, assets, debug script, and documentation to build output
-echo [3/5] Bundling embedded binaries (bin\), assets, and docs to build output...
-if exist "bin" (
-    echo Copying bin/ ^(fh_loader.exe, DLLs^) to %RELEASE_DIR%\bin\...
-    xcopy /e /i /y /q "bin" "%RELEASE_DIR%\bin\"
+:: 3. Sao chep file debug.bat va tai nguyen phu tro vao thu muc Release
+echo [3/6] Dong bo file debug.bat va tai nguyen vao thu muc Release...
+if exist "%~dp0debug.bat" (
+    copy /y "%~dp0debug.bat" "%TARGET_DIR%\debug.bat" >nul
+    echo       - Da chep debug.bat vao thu muc Release.
 )
-if exist "assets" (
-    echo Copying assets/...
-    xcopy /e /i /y /q "assets" "%RELEASE_DIR%\assets\"
+if exist "%~dp0install.bat" (
+    copy /y "%~dp0install.bat" "%TARGET_DIR%\install.bat" >nul
+    echo       - Da chep install.bat vao thu muc Release.
 )
-for %%f in (install.bat uninstall.bat uninstall.ps1 debug.bat ABOUT.txt README.md CHANGELOG.md USERGUIDE.md RELEASE_NOTES.md FLASH_TROUBLESHOOTING.md LICENSE license.key.example) do (
-    if exist "%%f" copy /y "%%f" "%RELEASE_DIR%\" >nul
+if exist "%~dp0uninstall.bat" (
+    copy /y "%~dp0uninstall.bat" "%TARGET_DIR%\uninstall.bat" >nul
+    echo       - Da chep uninstall.bat vao thu muc Release.
+)
+if exist "%~dp0ABOUT.txt" copy /y "%~dp0ABOUT.txt" "%TARGET_DIR%\" >nul
+copy /y "%~dp0uninstall.ps1" "%TARGET_DIR%\uninstall.ps1" >nul
+if errorlevel 1 (
+    echo [ERROR] Cannot package uninstall.ps1.
+    if /i not "%~1"=="--no-pause" pause
+    exit /b 1
+)
+if exist "%~dp0README.md" copy /y "%~dp0README.md" "%TARGET_DIR%\" >nul
+if exist "%~dp0CHANGELOG.md" copy /y "%~dp0CHANGELOG.md" "%TARGET_DIR%\" >nul
+if exist "%~dp0USERGUIDE.md" copy /y "%~dp0USERGUIDE.md" "%TARGET_DIR%\" >nul
+if exist "%~dp0RELEASE_NOTES.md" copy /y "%~dp0RELEASE_NOTES.md" "%TARGET_DIR%\" >nul
+if exist "%~dp0FLASH_TROUBLESHOOTING.md" copy /y "%~dp0FLASH_TROUBLESHOOTING.md" "%TARGET_DIR%\" >nul
+if exist "%~dp0LICENSE" copy /y "%~dp0LICENSE" "%TARGET_DIR%\" >nul
+if exist "%~dp0license.key.example" copy /y "%~dp0license.key.example" "%TARGET_DIR%\" >nul
+
+if exist "%~dp0bin" (
+    robocopy "%~dp0bin" "%TARGET_DIR%\bin" /E /R:1 /W:1 >nul
+    echo       - Da dong bo thu muc bin vao Release.
+)
+if exist "%~dp0assets" (
+    robocopy "%~dp0assets" "%TARGET_DIR%\assets" /E /R:1 /W:1 >nul
+    echo       - Da dong bo thu muc assets vao Release.
+)
+if exist "%~dp0i18n" (
+    robocopy "%~dp0i18n" "%TARGET_DIR%\i18n" /E /R:1 /W:1 >nul
+    echo       - Da dong bo thu muc i18n vao Release.
 )
 
-:: Create .Release.lnk shortcut at workspace root pointing to dist\
-powershell -NoProfile -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('.Release.lnk'); $Shortcut.TargetPath = Join-Path (Get-Item .).FullName 'dist'; $Shortcut.Save()"
-
-echo.
-:: 4. Copy fully self-contained release to dist/ (unpacked at root like Showcase)
-echo [4/5] Copying complete self-contained release directly to dist\...
-xcopy /e /i /y /q "%RELEASE_DIR%\*.*" "dist\"
-
-if %ERRORLEVEL% neq 0 (
-    echo.
-    echo [ERROR] Failed to copy release files to dist!
-    pause
-    exit /b %ERRORLEVEL%
+:: 4. Dong bo toan bo Release sang dist va tao goi zip chuan dart-build-pro
+echo [4/6] Dong bo sang dist va dong goi zip chuan phat hanh...
+if not exist "%~dp0windows\packaging\package_dist.ps1" (
+    echo [ERROR] Packaging script is missing: %~dp0windows\packaging\package_dist.ps1
+    if /i not "%~1"=="--no-pause" pause
+    exit /b 1
+)
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0windows\packaging\package_dist.ps1"
+if errorlevel 1 (
+    echo [ERROR] Packaging failed. Previous dist has been preserved.
+    if /i not "%~1"=="--no-pause" pause
+    exit /b 1
 )
 
-echo.
-:: 5. Create standalone ZIP package wrapped in Parent Folder
-echo [5/5] Packaging standalone ZIP release wrapped in parent folder...
-set PACK_NAME=JA_IQ5_Flash_v%APP_VERSION%_Windows_x64
-if exist "dist_pack" rmdir /s /q "dist_pack"
-mkdir "dist_pack\%PACK_NAME%"
-xcopy /e /i /y /q "%RELEASE_DIR%\*.*" "dist_pack\%PACK_NAME%\"
-powershell -NoProfile -Command "Compress-Archive -Path 'dist_pack\*' -DestinationPath 'dist\%PACK_NAME%.zip' -Force"
-if exist "dist_pack" rmdir /s /q "dist_pack"
+:: 5. Tao Shortcut den thu muc Release ngay tai goc du an
+echo [5/6] Tao shortcut .Release - Shortcut.lnk tai goc du an...
+set "SHORTCUT_PATH=%~dp0.Release - Shortcut.lnk"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut($env:SHORTCUT_PATH); $s.TargetPath = $env:TARGET_DIR; $s.Save()" >nul 2>&1
 
-:: Generate SHA256 checksum and OTA version metadata
-powershell -NoProfile -Command "$hash = (Get-FileHash -Path 'dist\%PACK_NAME%.zip' -Algorithm SHA256).Hash; Set-Content -Path 'dist\SHA256SUMS.txt' -Value \"$hash *%PACK_NAME%.zip\""
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$pub = Get-Content 'pubspec.yaml' -Raw; if ($pub -match '(?m)^version:\s*([^\r\n]+)') { $v = $Matches[1].Trim(); $baseV = $v.Split('+')[0]; $zip = 'JA_IQ5_Flash_v' + $baseV + '_Windows_x64.zip'; $notes = ''; if (Test-Path 'RELEASE_NOTES.md') { $notes = (Get-Content 'RELEASE_NOTES.md' -Raw).Trim() }; $meta = [ordered]@{ version = $v; fileName = $zip; releaseNotes = $notes; releaseDate = (Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ') }; $meta | ConvertTo-Json -Depth 4 | Set-Content 'dist\version.json' -Encoding UTF8 }"
+:: 6. Tu dong mo thu muc Release va Active len tren cung man hinh
+if /i "%~1"=="--no-pause" goto skip_open
+echo [6/6] Mo thu muc Release va active len tren cung (Foreground Window)...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$dir = '%TARGET_DIR%'; explorer.exe $dir; Start-Sleep -Milliseconds 500; $ws = New-Object -ComObject WScript.Shell; $sh = New-Object -ComObject Shell.Application; $activated = $false; foreach ($w in $sh.Windows()) { try { if ($w.Document.Folder.Self.Path -eq $dir) { [void]$ws.AppActivate($w.HWND); $activated = $true; break } } catch {} }; if (-not $activated) { [void]$ws.AppActivate('Release') }"
+:skip_open
 
 echo.
-echo =======================================================================
-echo  BUILD AND PACKAGING COMPLETED SUCCESSFULLY!
-echo =======================================================================
-echo.
-echo Self-contained build directory (unpacked):
-echo   %WORKSPACE_DIR%dist\
-echo.
-echo Standalone parent-folder ZIP package:
-echo   %WORKSPACE_DIR%dist\%PACK_NAME%.zip
-echo.
-echo Quick access shortcut created:
-echo   %WORKSPACE_DIR%.Release.lnk
-echo.
-pause
+echo ========================================================
+echo   [HOAN TAT] BUILD THANH CONG VA DA ACTIVE THU MUC
+echo   - Thu muc: %TARGET_DIR%
+echo   - Dist: %~dp0dist
+echo   - Runner debug: %TARGET_DIR%\debug.bat
+echo ========================================================
+if /i "%~1"=="--no-pause" exit /b 0
+echo Nhan phim bat ky de dong cua so nay (tu dong dong sau 5s)...
+timeout /t 5 >nul 2>&1 || pause >nul
+exit /b 0

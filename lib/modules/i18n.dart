@@ -779,6 +779,8 @@ const Map<String, Map<String, String>> _strings = {
     'CN': '正在重启…',
   },
   'card_edl_ready': {'EN': 'EDL Ready', 'VI': 'EDL Sẵn sàng', 'CN': 'EDL就绪'},
+  'card_queued': {'EN': 'Queued', 'VI': 'Đang chờ lượt', 'CN': '排队中'},
+  'card_offline': {'EN': 'Offline', 'VI': 'Đã ngắt', 'CN': '已断开'},
   'card_waiting_cmd': {
     'EN': 'Waiting for flash command…',
     'VI': 'Chờ lệnh nạp firmware…',

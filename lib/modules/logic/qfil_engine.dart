@@ -1,11 +1,12 @@
 // lib/modules/logic/qfil_engine.dart
-import 'dart:convert';
+import 'dart:isolate';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../constants.dart';
 import '../i18n.dart';
-import '../utils.dart';
+import 'operation_support.dart';
+import 'firmware_preflight.dart';
 import 'flash_isolate.dart';
 
 final RegExp _rePercentFh = RegExp(
@@ -29,7 +30,9 @@ class QfilEngine {
   final int helloVersionSup;
   final int helloMode;
 
-  Process? _process;
+  ManagedProcess? _process;
+  String phase = 'queued';
+  final String runId = DateTime.now().microsecondsSinceEpoch.toString();
   SaharaIsolateHandle? _saharaHandle;
   bool _aborted = false;
 
@@ -47,7 +50,7 @@ class QfilEngine {
   void abort() {
     _aborted = true;
     _saharaHandle?.abort();
-    _process?.kill();
+    _process?.abort();
   }
 
   /// Execute the 2-phase flashing sequence. Returns true on success.
@@ -56,7 +59,28 @@ class QfilEngine {
     void Function(String message, String level)? onLog,
     void Function(bool success, String summary)? onDone,
   }) async {
-    _aborted = false;
+    return DeviceOperationQueue.shared.run(() async {
+      if (_aborted) return _abortedResult(onLog, onDone);
+      try {
+        final directory = fwDir;
+        final errors = await Isolate.run(() => validateFirmware(directory));
+        if (_aborted) return _abortedResult(onLog, onDone);
+        if (errors.isNotEmpty) return _fail(errors.join('\n'), onLog, onDone);
+        return await withQualcommService(() async {
+          if (_aborted) return _abortedResult(onLog, onDone);
+          return _run(onProgress: onProgress, onLog: onLog, onDone: onDone);
+        });
+      } catch (error) {
+        return _fail('Flash failed: $error', onLog, onDone);
+      }
+    });
+  }
+
+  Future<bool> _run({
+    void Function(int)? onProgress,
+    void Function(String, String)? onLog,
+    void Function(bool, String)? onDone,
+  }) async {
     final fwAbs = Directory(fwDir).absolute.path;
 
     void log(String msg, [String level = 'info']) {
@@ -93,23 +117,9 @@ class QfilEngine {
     log('━' * 48);
     log('[PHASE 1] Sahara upload → $firehoseElf');
 
-    bool svcStopped = false;
-    if (!helloCaptured) {
-      log(tr('log_stopping_mtu_service'));
-      svcStopped = await stopQualcommService();
-      if (svcStopped) {
-        log(tr('log_mtu_service_stopped'), 'success');
-      } else {
-        log(tr('log_mtu_service_stop_fail'), 'warn');
-      }
-    }
-
+    phase = 'sahara';
     if (onProgress != null) onProgress(2);
-
-    if (_aborted) {
-      if (svcStopped) await startQualcommService();
-      return _abortedResult(onLog, onDone);
-    }
+    if (_aborted) return _abortedResult(onLog, onDone);
 
     // Run in a separate isolate so Win32 ReadFile() doesn't block the UI thread
     _saharaHandle = SaharaIsolateHandle();
@@ -130,12 +140,10 @@ class QfilEngine {
     _saharaHandle = null;
 
     if (_aborted) {
-      if (svcStopped) await startQualcommService();
       return _abortedResult(onLog, onDone);
     }
 
     if (!saharaOk) {
-      if (svcStopped) await startQualcommService();
       return _fail(
         tr('err_sahara_upload_fail').replaceAll('{msg}', saharaMsg),
         onLog,
@@ -151,12 +159,6 @@ class QfilEngine {
     if (onProgress != null) onProgress(8);
     await Future.delayed(const Duration(seconds: 2));
 
-    // Restart service since Sahara is done
-    if (svcStopped) {
-      await startQualcommService();
-      svcStopped = false;
-    }
-
     if (_aborted) return _abortedResult(onLog, onDone);
 
     // ══════════════════════════════════════════════════════════════════════
@@ -164,7 +166,7 @@ class QfilEngine {
     // ══════════════════════════════════════════════════════════════════════
     final logsDir = Directory(p.join(baseDir, 'logs'));
     if (!logsDir.existsSync()) logsDir.createSync(recursive: true);
-    final portTracePath = p.join(logsDir.path, 'port_trace_$port.txt');
+    final portTracePath = p.join(logsDir.path, 'port_trace_${port}_$runId.txt');
 
     final commonArgs = [
       '--port=\\\\.\\$port',
@@ -191,6 +193,7 @@ class QfilEngine {
       ).replaceAll('{port}', port).replaceAll('{path}', fwAbs),
     );
 
+    phase = 'writing';
     final flashSuccess = await _runFhLoader(
       args: flashArgs,
       workDir: fwAbs,
@@ -219,6 +222,10 @@ class QfilEngine {
       activeArgs.add('--reset');
     }
 
+    phase = autoReboot ? 'resetting' : 'activating';
+    activeArgs.add(
+      '--porttracename=${p.join(logsDir.path, 'reset_${port}_$runId.txt')}',
+    );
     final activeSuccess = await _runFhLoader(
       args: activeArgs,
       workDir: fwAbs,
@@ -256,84 +263,72 @@ class QfilEngine {
     required void Function(String msg, String lvl) onLog,
   }) async {
     if (_aborted) return false;
+    final process = ManagedProcess();
+    _process = process;
+    int lastPct = -1;
     try {
-      _process = await Process.start(
+      final code = await process.run(
         fhLoaderExePath,
         args,
         workingDirectory: workDir,
-      );
-      if (_aborted) _process!.kill();
-    } catch (e) {
-      onLog(
-        '[$label] ${tr('err_fh_loader_start').replaceAll('{err}', '$e')}',
-        'error',
-      );
-      return false;
-    }
+        idleTimeout: label == 'PHASE 2'
+            ? const Duration(minutes: 10)
+            : const Duration(minutes: 2),
+        totalTimeout: label == 'PHASE 2'
+            ? const Duration(hours: 2)
+            : const Duration(minutes: 5),
+        onLine: (line, isError) {
+          if (_aborted || line.trim().isEmpty) return;
+          if (isError) {
+            onLog(line, 'error');
+            return;
+          }
+          // Determine log levels
+          String lvl = 'info';
+          if (_reError.hasMatch(line)) {
+            lvl = 'error';
+          } else if (_reOk.hasMatch(line)) {
+            lvl = 'success';
+          }
+          onLog(line, lvl);
 
-    final process = _process!;
-    final stderrDone = process.stderr
-        .transform(const Utf8Decoder(allowMalformed: true))
-        .transform(const LineSplitter())
-        .forEach((line) {
-          if (!_aborted && line.trim().isNotEmpty) onLog(line, 'error');
-        });
-    int lastPct = -1;
+          // Parse percentages
+          if (onProgress != null) {
+            double? pctVal;
 
-    // Listen to stdout stream
-    final stdoutStream = _process!.stdout
-        .transform(const Utf8Decoder(allowMalformed: true))
-        .transform(const LineSplitter());
+            final m1 = _rePercentFh.firstMatch(line);
+            if (m1 != null) {
+              pctVal = double.tryParse(m1.group(1) ?? '');
+            } else {
+              // Fallback bare percent if line references transferred progress
+              if (line.toLowerCase().contains('percent') ||
+                  line.toLowerCase().contains('transferred')) {
+                final m2 = _rePercentAlt.firstMatch(line);
+                if (m2 != null) {
+                  pctVal = double.tryParse(m2.group(1) ?? '');
+                }
+              }
+            }
 
-    await for (var line in stdoutStream) {
-      if (_aborted) break;
-      line = line.trim();
-      if (line.isEmpty) continue;
-
-      // Determine log levels
-      String lvl = 'info';
-      if (_reError.hasMatch(line)) {
-        lvl = 'error';
-      } else if (_reOk.hasMatch(line)) {
-        lvl = 'success';
-      }
-      onLog(line, lvl);
-
-      // Parse percentages
-      if (onProgress != null) {
-        double? pctVal;
-
-        final m1 = _rePercentFh.firstMatch(line);
-        if (m1 != null) {
-          pctVal = double.tryParse(m1.group(1) ?? '');
-        } else {
-          // Fallback bare percent if line references transferred progress
-          if (line.toLowerCase().contains('percent') ||
-              line.toLowerCase().contains('transferred')) {
-            final m2 = _rePercentAlt.firstMatch(line);
-            if (m2 != null) {
-              pctVal = double.tryParse(m2.group(1) ?? '');
+            if (pctVal != null) {
+              // Map 0-100% of fh_loader -> [pctLo, pctHi]
+              final mapped = pctLo + (pctVal / 100.0 * (pctHi - pctLo)).toInt();
+              final finalPct = mapped.clamp(pctLo, pctHi);
+              if (finalPct > lastPct) {
+                lastPct = finalPct;
+                onProgress(finalPct);
+              }
             }
           }
-        }
-
-        if (pctVal != null) {
-          // Map 0-100% of fh_loader -> [pctLo, pctHi]
-          final mapped = pctLo + (pctVal / 100.0 * (pctHi - pctLo)).toInt();
-          final finalPct = mapped.clamp(pctLo, pctHi);
-          if (finalPct > lastPct) {
-            lastPct = finalPct;
-            onProgress(finalPct);
-          }
-        }
-      }
+        },
+      );
+      return !_aborted && code == 0;
+    } catch (error) {
+      onLog('[$label] $error', 'error');
+      return false;
+    } finally {
+      _process = null;
     }
-
-    final exitCode = await process.exitCode;
-    await stderrDone;
-    _process = null;
-
-    return !_aborted && exitCode == 0;
   }
 
   bool _fail(

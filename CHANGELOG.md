@@ -2,6 +2,29 @@
 
 All notable changes to **JA IQ5 Reflash** will be documented in this file.
 
+## [v1.3.1] - 2026-09-23
+
+### 🚀 Nâng cấp & Tính năng mới
+- **🛠️ Chuẩn hóa Hệ thống Biên dịch & Đóng gói `build.bat` (Chuẩn `JA_LAN_Messenger`):**
+  - Đồng bộ quy trình biên dịch 6 bước chuẩn mực: dừng tiến trình cũ, biên dịch Release mode, đồng bộ tài nguyên phụ trợ (`bin/`, `assets/`, `i18n/`, bộ ba cài đặt `install.bat`, `uninstall.bat`, `uninstall.ps1`, tài liệu và debug script).
+  - Tích hợp PowerShell packager chuyên nghiệp [`windows\packaging\package_dist.ps1`](windows/packaging/package_dist.ps1) với kiểm tra tính toàn vẹn nhị phân `ProductVersion` khớp chính xác với `pubspec.yaml`.
+  - Tự động sinh phím tắt `.Release - Shortcut.lnk` tại thư mục gốc trỏ nhanh vào thư mục `Release`.
+  - Tự động mở và kích hoạt cửa sổ Explorer hiển thị thư mục `Release` lên trên cùng màn hình (`Foreground Window`).
+  - Hỗ trợ tham số `--no-pause` phục vụ tự động hóa (`gitpush` / CI).
+
+### 🐛 Sửa lỗi & Tối ưu hóa
+- **🔒 Khắc phục Triệt để Lỗi Khóa Thư mục `dist` trên OneDrive:**
+  - Cơ chế Fallback thông minh: Khi thư mục `dist` bị tiến trình khác hoặc dịch vụ đồng bộ đám mây OneDrive giám sát handle (`ERROR_SHARING_VIOLATION`), kịch bản tự động chuyển sang chế độ đồng bộ tệp trực tiếp vào `dist/` mà không bị dừng hay văng lỗi.
+  - Bảo toàn toàn vẹn các file cấu hình và nhật ký runtime người dùng (`config.ini`, `config.json`, `license.key`, `logs/`).
+  - Tự động lưu bản snapshot trước đó vào thư mục `backup/`.
+- **⚡ Thay thế `xcopy` bằng `robocopy`:**
+  - Loại bỏ lỗi `Access denied` khi ghi đè các tệp phụ trợ có thuộc tính đặc thù trên Windows.
+- **🧪 Mở rộng Bộ Kiểm thử:**
+  - Bổ sung kiểm thử vòng đời (`flash_lifecycle_test.dart`) và độ ổn định (`flash_stability_test.dart`), đạt 100% kiểm thử thành công (81/81 tests passing).
+
+### 📦 Phát hành
+- Đồng bộ version 1.3.1+4 trong `pubspec.yaml`, `constants.dart`, `ABOUT.txt`, `README.md`, `USERGUIDE.md`, `RELEASE_NOTES.md`.
+
 ---
 
 ## [v1.3.0] - 2026-09-23

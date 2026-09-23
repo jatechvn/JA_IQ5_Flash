@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import '../constants.dart';
+import 'firmware_preflight.dart';
 import '../i18n.dart';
 
 enum FirmwareSlotType {
@@ -144,7 +146,7 @@ class FirmwareSlotProfile {
   }
 
   /// Run detailed check on directory content for Qualcomm flash requirements
-  FirmwareValidationResult validate() {
+  FirmwareValidationResult validate({bool deep = true}) {
     final trimmedPath = path.trim();
     if (trimmedPath.isEmpty) {
       lastValidation = const FirmwareValidationResult(
@@ -193,6 +195,17 @@ class FirmwareSlotProfile {
       missing.add(patchXml);
     }
 
+    if (deep && missing.isEmpty) {
+      final errors = validateFirmware(trimmedPath);
+      if (errors.isNotEmpty) {
+        lastValidation = FirmwareValidationResult(
+          isValid: false,
+          statusKey: 'fw_content_invalid',
+          detailMessage: errors.join('\n'),
+        );
+        return lastValidation;
+      }
+    }
     final bool ok = missing.isEmpty;
     String msg;
     if (ok) {
@@ -213,3 +226,13 @@ class FirmwareSlotProfile {
     return lastValidation;
   }
 }
+
+Future<FirmwareValidationResult> validateFirmwareSlot(String directory) =>
+    Isolate.run(
+      () => FirmwareSlotProfile(
+        index: 0,
+        type: FirmwareSlotType.factory,
+        customName: '',
+        path: directory,
+      ).validate(),
+    );

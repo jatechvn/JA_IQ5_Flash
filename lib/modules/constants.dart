@@ -4,7 +4,7 @@ import 'package:path/path.dart' as p;
 
 const String appId = 'JA_IQ5_REFLASH';
 const String appName = 'JA IQ5 Reflash';
-const String appVersion = '1.3.0+3';
+const String appVersion = '1.3.1+4';
 const String appUserModelId = 'JATech.JA_IQ5_REFLASH.1.0';
 
 // Qualcomm EDL USB Identifiers

@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:ja_iq5_flash/modules/ui/device_card.dart';
+import 'package:ja_iq5_flash/modules/ui/styles.dart';
+import 'package:ja_iq5_flash/modules/i18n.dart';
 import 'package:ja_iq5_flash/modules/logic/device_manager.dart';
 import 'package:ja_iq5_flash/modules/logic/firmware_slot.dart';
 import 'package:ja_iq5_flash/modules/logic/flash_isolate.dart';
@@ -37,6 +41,81 @@ FlashSession sessionWith(QfilEngine Function(String) factory) => FlashSession(
 );
 
 void main() {
+  testWidgets('disconnected card disables flash and reboot controls', (
+    tester,
+  ) async {
+    final session = sessionWith((_) => FakeEngine('rom'));
+    addTearDown(session.dispose);
+    session.disconnected();
+    setLang('EN');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 650,
+            height: 450,
+            child: DeviceCard(
+              session: session,
+              theme: AppTheme(),
+              autoFlashLocked: false,
+              onFlashRequested: (_) => fail('disconnected flash'),
+              onAbortRequested: (_) {},
+              onRemoveRequested: (_) {},
+              onRebootRequested: (_) => fail('disconnected reboot'),
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.textContaining('Offline'), findsOneWidget);
+    final buttons = tester.widgetList<ElevatedButton>(
+      find.byType(ElevatedButton),
+    );
+    expect(buttons, isNotEmpty);
+    expect(buttons.every((button) => button.onPressed == null), isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  test(
+    'disconnect during writing fails and blocks reuse of disconnected port',
+    () async {
+      final engine = FakeEngine('rom')..phase = 'writing';
+      final session = sessionWith((_) => engine);
+      addTearDown(session.dispose);
+      final running = session.start();
+      session.disconnected();
+      expect(engine.aborted, isTrue);
+      engine.result.complete(true);
+      expect(await running, isFalse);
+      expect(session.status, FlashSession.statusError);
+      expect(session.logs, contains(contains('disconnected')));
+      expect(await session.start(), isFalse);
+    },
+  );
+
+  test('expected reset disconnect preserves actual engine result', () async {
+    final engine = FakeEngine('rom')..phase = 'resetting';
+    final session = sessionWith((_) => engine);
+    addTearDown(session.dispose);
+    final running = session.start();
+    session.disconnected();
+    expect(engine.aborted, isFalse);
+    engine.result.complete(true);
+    expect(await running, isTrue);
+    expect(session.status, FlashSession.statusSuccess);
+    expect(session.connected, isFalse);
+  });
+
+  test('session log memory is bounded', () {
+    final session = sessionWith((_) => FakeEngine('rom'));
+    addTearDown(session.dispose);
+    for (var i = 0; i < 1500; i++) {
+      session.appendLog('$i');
+    }
+    expect(session.logs.length, 1000);
+    expect(session.logs.first, '500');
+  });
+
   test('abort from running listener prevents engine startup', () async {
     var starts = 0;
     final session = sessionWith((_) {

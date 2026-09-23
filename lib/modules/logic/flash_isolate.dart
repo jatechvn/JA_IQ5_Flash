@@ -164,7 +164,13 @@ class SaharaIsolateHandle {
         debugName: 'SaharaIsolate-$port',
       );
       if (_aborted) _isolate?.kill(priority: Isolate.immediate);
-      return await completer.future;
+      return await completer.future.timeout(
+        const Duration(minutes: 5),
+        onTimeout: () {
+          abort();
+          return (false, 'Sahara timeout after 5 minutes');
+        },
+      );
     } catch (error) {
       return (false, 'Sahara isolate error: $error');
     } finally {

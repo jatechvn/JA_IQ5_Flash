@@ -499,10 +499,13 @@ Future<(bool, String)> _transferLoop(
 }
 
 /// Reset device via Sahara reset command.
-Future<(bool, String)> saharaResetPort(String port) async {
+Future<(bool, String)> saharaResetPort(
+  String port, {
+  bool manageService = true,
+}) async {
   try {
     // Stop qcmtusvc so the device can boot properly and doesn't get captured again
-    await stopQualcommService();
+    if (manageService) await stopQualcommService();
 
     final serial = WinSerial(port);
     if (!serial.open(baudrate: 115200, timeoutSeconds: 0.3)) {

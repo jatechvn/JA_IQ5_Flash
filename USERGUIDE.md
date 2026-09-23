@@ -1,4 +1,4 @@
-# 📘 Hướng dẫn Sử dụng - JA IQ5 Reflash v1.3.0
+# 📘 Hướng dẫn Sử dụng - JA IQ5 Reflash v1.3.1
 
 Ứng dụng desktop chuyên nghiệp hỗ trợ nạp firmware tự động cho nhiều thiết bị Qualcomm Snapdragon (EDL 9008) đồng thời trên nền tảng Windows 10 & 11 (x64).
 
@@ -18,13 +18,13 @@
 ## 1. Khởi động & Cài đặt
 
 ### Cách 1: Cài đặt chuẩn vào Windows (Khuyên dùng)
-1. Tải gói phát hành `JA_IQ5_Flash_v1.3.0_Windows_x64.zip`.
+1. Tải gói phát hành `JA_IQ5_Flash_v1.3.1_Windows_x64.zip`.
 2. Giải nén gói phát hành, nhấp đúp vào `install.bat` để chạy cài đặt tự động (không cần quyền Administrator).
 3. Ứng dụng sẽ được cài đặt vào `%LOCALAPPDATA%\Programs\JA_IQ5_Flash` với đầy đủ shortcut trên Desktop và Start Menu.
 4. Gỡ bỏ bất kỳ lúc nào qua `uninstall.bat` hoặc Control Panel / Windows Settings.
 
 ### Cách 2: Chạy trực tiếp bản Portable
-1. Tải gói phát hành `JA_IQ5_Flash_v1.3.0_Windows_x64.zip`.
+1. Tải gói phát hành `JA_IQ5_Flash_v1.3.1_Windows_x64.zip`.
 2. Giải nén toàn bộ nội dung gói vào thư mục làm việc (ví dụ: `D:\Tools\JA_IQ5_Flash\`).
 3. Nhấp đúp chuột vào `ja_iq5_flash.exe` để mở ứng dụng.
 4. *Lưu ý*: Ứng dụng tự động tạm dừng Qualcomm Service khi khởi động để bắt trọn gói Sahara 9008 và tự kích hoạt lại khi đóng ứng dụng.

@@ -3,6 +3,7 @@ import 'dart:io';
 import '../constants.dart';
 import '../i18n.dart';
 import 'device_manager.dart';
+import 'operation_support.dart';
 
 const int adbWaitSeconds = 45;
 const Duration pollInterval = Duration(milliseconds: 1500);
@@ -18,7 +19,7 @@ Future<(bool, String)> adbRebootEdl(
   final runCommand =
       commandRunner ??
       (String executable, List<String> arguments) =>
-          Process.run(executable, arguments);
+          runDeviceCommand(executable, arguments);
   try {
     final res = await runCommand(adbExePath, ['-s', serial, 'reboot', 'edl']);
     if (res.exitCode == 0) {
@@ -47,7 +48,7 @@ Future<(bool, String)> adbRebootEdl(
 /// Send `fastboot -s <serial> oem edl` command. Falls back to reboot-edl.
 Future<(bool, String)> fastbootRebootEdl(String serial) async {
   try {
-    final res = await Process.run(fastbootExePath, [
+    final res = await runDeviceCommand(fastbootExePath, [
       '-s',
       serial,
       'oem',
@@ -57,7 +58,7 @@ Future<(bool, String)> fastbootRebootEdl(String serial) async {
       return (true, 'Lệnh Fastboot OEM EDL đã gửi tới: $serial');
     }
 
-    final res2 = await Process.run(fastbootExePath, [
+    final res2 = await runDeviceCommand(fastbootExePath, [
       '-s',
       serial,
       'reboot-edl',
@@ -74,7 +75,11 @@ Future<(bool, String)> fastbootRebootEdl(String serial) async {
 /// Reboot Fastboot device to System/ADB
 Future<(bool, String)> fastbootRebootAdb(String serial) async {
   try {
-    final res = await Process.run(fastbootExePath, ['-s', serial, 'reboot']);
+    final res = await runDeviceCommand(fastbootExePath, [
+      '-s',
+      serial,
+      'reboot',
+    ]);
     if (res.exitCode == 0) {
       return (true, 'Lệnh fastboot reboot gửi tới: $serial');
     }

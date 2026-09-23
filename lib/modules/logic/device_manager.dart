@@ -2,14 +2,14 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
-import 'dart:typed_data';
+import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 
 import '../constants.dart';
-import '../utils.dart';
-import 'win_serial.dart';
-import 'sahara.dart';
+import 'operation_support.dart';
+
+List<DeviceInfo> _scanEdlInBackground() => DeviceManager().scanEdlDevices();
 
 class DeviceInfo {
   final String port;
@@ -279,7 +279,9 @@ class DeviceManager {
 
   Future<void> _poll() async {
     // 1. Scan EDL Ports
-    final currentEdl = {for (var d in scanEdlDevices()) d.port: d};
+    final devices = await Isolate.run(_scanEdlInBackground);
+    if (_disposed) return;
+    final currentEdl = {for (var d in devices) d.port: d};
 
     // Check newly connected ports
     for (final entry in currentEdl.entries) {
@@ -287,8 +289,6 @@ class DeviceManager {
       final dev = entry.value;
 
       if (!_knownEdl.containsKey(port)) {
-        // Stop qcmtusvc and try pre-capturing Sahara HELLO
-        await _captureSaharaHello(dev);
         if (_disposed) return;
         _knownEdl[port] = dev;
         if (onDeviceAdded != null) {
@@ -317,40 +317,13 @@ class DeviceManager {
     }
   }
 
-  /// Stops service and captures Sahara HELLO packets.
-  Future<void> _captureSaharaHello(DeviceInfo dev) async {
-    // 1. Stop service
-    await stopQualcommService();
-
-    final serial = WinSerial(dev.port);
-    // Open port and read with short timeout
-    if (serial.open(baudrate: 115200, timeoutSeconds: 1.5)) {
-      try {
-        final raw = serial.read(48);
-        if (raw.length >= 24) {
-          final view = ByteData.sublistView(raw);
-          final cmd = view.getUint32(0, Endian.little);
-          if (cmd == saharaHello) {
-            dev.saharaVersion = view.getUint32(8, Endian.little);
-            dev.saharaVersionSup = view.getUint32(12, Endian.little);
-            dev.saharaMode = view.getUint32(20, Endian.little);
-            dev.saharaHelloOk = true;
-          }
-        }
-      } catch (_) {
-      } finally {
-        serial.close();
-      }
-    }
-  }
-
   /// Execute commands to list ADB and Fastboot serial details.
   Future<List<AdbDevice>> _scanAdbFastboot() async {
     final list = <AdbDevice>[];
 
     // 1. Scan ADB devices
     try {
-      final res = await Process.run(adbExePath, ['devices', '-l']);
+      final res = await runDeviceCommand(adbExePath, ['devices', '-l']);
       if (res.exitCode == 0) {
         final lines = LineSplitter.split(res.stdout.toString());
         for (var line in lines) {
@@ -386,7 +359,7 @@ class DeviceManager {
 
     // 2. Scan Fastboot devices
     try {
-      final res = await Process.run(fastbootExePath, ['devices']);
+      final res = await runDeviceCommand(fastbootExePath, ['devices']);
       if (res.exitCode == 0) {
         final lines = LineSplitter.split(res.stdout.toString());
         for (var line in lines) {

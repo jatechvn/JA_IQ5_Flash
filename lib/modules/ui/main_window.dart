@@ -12,6 +12,8 @@ import '../ja_license_checker.dart';
 import '../utils.dart';
 import '../logic/device_manager.dart';
 import '../logic/flash_session.dart';
+import '../logic/reboot_tracker.dart';
+import '../logic/operation_support.dart';
 import '../logic/firmware_slot.dart';
 import '../logic/reboot_worker.dart';
 import '../logic/fastboot_to_edl_worker.dart';
@@ -56,7 +58,8 @@ class _MainWindowState extends State<MainWindow> {
   // Auto-flash tracking structures
   final Map<String, int> _autoProcessed = {}; // Serial -> timestamp
   final Set<String> _flashCycled = {};
-  int _expectingAdbFromReboot = 0;
+  final _rebootTracker = RebootTracker();
+  Timer? _logUpdateTimer;
 
   // Worker references to allow aborting
   final Map<String, RebootWorker> _rebootWorkers = {};
@@ -90,8 +93,9 @@ class _MainWindowState extends State<MainWindow> {
     _devicePollTimer = Timer.periodic(const Duration(milliseconds: 2000), (
       timer,
     ) {
-      _deviceManager.poll();
-      _runAutoPipeline();
+      _deviceManager.poll().then((_) {
+        if (mounted) _runAutoPipeline();
+      });
     });
 
     _licenseRefreshTimer = Timer.periodic(const Duration(hours: 4), (timer) {
@@ -173,6 +177,7 @@ class _MainWindowState extends State<MainWindow> {
     _devicePollTimer?.cancel();
     _licenseRefreshTimer?.cancel();
     _deviceManager.dispose();
+    _logUpdateTimer?.cancel();
     for (final session in _sessions.values) {
       session.dispose();
     }
@@ -184,9 +189,17 @@ class _MainWindowState extends State<MainWindow> {
     }
     _globalLogController.dispose();
     _pathController.dispose();
-    _logFileSink?.flush();
-    _logFileSink?.close();
+    unawaited(_closeLogFile());
     super.dispose();
+  }
+
+  Future<void> _closeLogFile() async {
+    final sink = _logFileSink;
+    _logFileSink = null;
+    try {
+      await sink?.flush();
+      await sink?.close();
+    } catch (_) {}
   }
 
   // ── Config loader & Saver ──────────────────────────────────────────
@@ -332,13 +345,17 @@ class _MainWindowState extends State<MainWindow> {
     }
   }
 
-  void _validateAllSlots() {
-    setState(() {
-      for (final slot in _slots) {
-        slot.validate();
+  Future<void> _validateAllSlots() async {
+    for (final slot in _slots) {
+      final directory = slot.path;
+      final result = await validateFirmwareSlot(directory);
+      if (!mounted) return;
+      if (slot.path == directory) {
+        setState(() {
+          slot.lastValidation = result;
+        });
       }
-      _fwDir = _slots[_activeFwSlot].path;
-    });
+    }
   }
 
   void _checkLicense() {
@@ -349,7 +366,7 @@ class _MainWindowState extends State<MainWindow> {
 
   void _appendGlobalLog(String message, String level) {
     if (!mounted) return;
-    setState(() {
+    {
       final timestamp = DateTime.now().toString().substring(11, 19);
       final formatted = '[$timestamp] [${level.toUpperCase()}] $message';
       _globalLogs.add(formatted);
@@ -359,14 +376,18 @@ class _MainWindowState extends State<MainWindow> {
       try {
         _logFileSink?.writeln(formatted);
       } catch (_) {}
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_globalLogController.hasClients) {
-        _globalLogController.jumpTo(
-          _globalLogController.position.maxScrollExtent,
-        );
-      }
+    }
+    _logUpdateTimer ??= Timer(const Duration(milliseconds: 100), () {
+      _logUpdateTimer = null;
+      if (!mounted) return;
+      setState(() {});
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _globalLogController.hasClients) {
+          _globalLogController.jumpTo(
+            _globalLogController.position.maxScrollExtent,
+          );
+        }
+      });
     });
   }
 
@@ -379,15 +400,22 @@ class _MainWindowState extends State<MainWindow> {
           'session_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}.log';
       final logFile = File(p.join(logsDir.path, fileName));
       _logFileSink = logFile.openWrite(mode: FileMode.writeOnlyAppend);
+      unawaited(_logFileSink!.done.catchError((Object _) {}));
     } catch (_) {}
   }
 
-  void _onDeviceAdded(DeviceInfo dev) {
+  void _onDeviceAdded(DeviceInfo dev, {bool allowAutoFlash = true}) {
     if (!mounted) return;
     _appendGlobalLog(
       tr('log_edl_detected').replaceAll('{port}', dev.port),
       'info',
     );
+    final previous = _sessions[dev.port];
+    // A COM number can be reused before its old process exits. Do not overlap.
+    if (previous?.isRunning == true || _rebootWorkers.containsKey(dev.port)) {
+      return;
+    }
+    previous?.dispose();
     setState(() {
       _sessions[dev.port] = FlashSession(
         device: dev,
@@ -405,14 +433,16 @@ class _MainWindowState extends State<MainWindow> {
             ).replaceAll('{port}', port).replaceAll('{result}', resStr),
             ok ? 'success' : 'error',
           );
-          if (_autoFlash && ok) {
-            _expectingAdbFromReboot++;
+          if (ok) _expectReboot(dev);
+          final current = _deviceManager.knownEdl[port];
+          if (current != null && !identical(current, dev)) {
+            _onDeviceAdded(current, allowAutoFlash: false);
           }
         },
       );
     });
 
-    if (_autoFlash) {
+    if (_autoFlash && allowAutoFlash) {
       _startFlash(dev.port);
     }
   }
@@ -424,9 +454,9 @@ class _MainWindowState extends State<MainWindow> {
       'warn',
     );
     setState(() {
-      _sessions.remove(port);
-      _rebootWorkers[port]?.abort();
-      _rebootWorkers.remove(port);
+      _sessions[port]?.disconnected();
+      final reboot = _rebootWorkers[port];
+      if (reboot != null && !reboot.resetting) reboot.abort();
     });
   }
 
@@ -448,13 +478,14 @@ class _MainWindowState extends State<MainWindow> {
   Future<void> _startFlash(String port) async {
     final session = _sessions[port];
     if (session == null ||
+        !session.connected ||
         session.isRunning ||
         _rebootWorkers.containsKey(port)) {
       return;
     }
 
     final activeSlot = _slots[_activeFwSlot];
-    if (!activeSlot.validate().isValid) {
+    if (!activeSlot.validate(deep: false).isValid) {
       showAlertDialog(
         context: context,
         title: tr('fw_missing'),
@@ -484,13 +515,13 @@ class _MainWindowState extends State<MainWindow> {
       _appendGlobalLog(tr('log_flash_no_devices'), 'warn');
       return;
     }
-    for (final port in _sessions.keys) {
+    for (final port in _sessions.keys.toList()) {
       _startFlash(port);
     }
   }
 
   void _abortAll() {
-    for (final port in _sessions.keys) {
+    for (final port in _sessions.keys.toList()) {
       _abortFlash(port);
     }
     for (final worker in _fastbootWorkers.values) {
@@ -503,8 +534,11 @@ class _MainWindowState extends State<MainWindow> {
 
   // ── Reboot operations ─────────────────────────────────────
   Future<void> _runRebootWorker(String port) async {
-    if (_rebootWorkers.containsKey(port) ||
-        (_sessions[port]?.isRunning ?? false)) {
+    final session = _sessions[port];
+    if (session == null ||
+        !session.connected ||
+        _rebootWorkers.containsKey(port) ||
+        session.isRunning) {
       return;
     }
 
@@ -524,17 +558,20 @@ class _MainWindowState extends State<MainWindow> {
       },
     );
 
-    if (!mounted) return;
-    if (success) {
-      _expectingAdbFromReboot++;
-    }
+    if (!mounted || !identical(_rebootWorkers[port], worker)) return;
+    if (success) _expectReboot(session.device);
+    _appendGlobalLog('[$port] $msg', success ? 'info' : 'error');
 
     setState(() {
       _rebootWorkers.remove(port);
-      _sessions[port]?.setStatus(
+      session.setStatus(
         success ? FlashSession.statusSuccess : FlashSession.statusError,
       );
     });
+    final current = _deviceManager.knownEdl[port];
+    if (current != null && !identical(current, session.device)) {
+      _onDeviceAdded(current, allowAutoFlash: false);
+    }
   }
 
   // ── Fastboot -> ADB -> EDL pipeline ──────────────────────────
@@ -576,8 +613,32 @@ class _MainWindowState extends State<MainWindow> {
     await worker.run(_deviceManager);
   }
 
+  void _expectReboot(DeviceInfo device) {
+    final online = _deviceManager.knownAdb
+        .where((d) => !d.isFastboot && d.state == 'device')
+        .map((d) => d.serial)
+        .toSet();
+    _rebootTracker.expect(device.serialNumber, online);
+    _appendGlobalLog(
+      '[${device.port}] Reset sent; waiting for confirmed ADB identity.',
+      'info',
+    );
+  }
+
   // ── Auto Pipeline Coordinator ──────────────────────────────
   void _runAutoPipeline() {
+    final online = _deviceManager.knownAdb
+        .where((d) => !d.isFastboot && d.state == 'device')
+        .map((d) => d.serial)
+        .toSet();
+    for (final serial in _rebootTracker.observe(online)) {
+      _adbStatus[serial] = 'success';
+      _flashCycled.add(serial);
+      _appendGlobalLog(
+        tr('log_flash_success_reboot').replaceAll('{serial}', serial),
+        'success',
+      );
+    }
     if (!_autoFlash) return;
 
     // 1. Skip fastboot devices in Auto mode
@@ -604,13 +665,12 @@ class _MainWindowState extends State<MainWindow> {
         final serial = dev.serial;
         final status = _adbStatus[serial] ?? 'idle';
 
-        if (_expectingAdbFromReboot > 0) {
-          _expectingAdbFromReboot--;
-          _adbStatus[serial] = 'success';
+        if (_rebootTracker.hasUnknown && !_flashCycled.contains(serial)) {
+          _adbStatus[serial] = 'waiting';
           _flashCycled.add(serial);
           _appendGlobalLog(
-            tr('log_flash_success_reboot').replaceAll('{serial}', serial),
-            'success',
+            '[$serial] ADB detected; reboot identity is unconfirmed. Auto EDL paused; verify the device manually.',
+            'warn',
           );
           continue;
         }
@@ -637,7 +697,7 @@ class _MainWindowState extends State<MainWindow> {
     });
 
     try {
-      final res = await Process.run(adbExePath, [
+      final res = await runDeviceCommand(adbExePath, [
         '-s',
         serial,
         'reboot',
@@ -2008,8 +2068,10 @@ class _MainWindowState extends State<MainWindow> {
                                       _autoFlash = val;
                                       if (val) {
                                         _flashCycled.clear();
+                                        _rebootTracker.clear();
                                         _autoProcessed.clear();
-                                        for (final port in _sessions.keys) {
+                                        for (final port
+                                            in _sessions.keys.toList()) {
                                           _startFlash(port);
                                         }
                                         _runAutoPipeline();
@@ -2264,8 +2326,17 @@ class _MainWindowState extends State<MainWindow> {
                                             onAbortRequested: _abortFlash,
                                             onRebootRequested: _runRebootWorker,
                                             onRemoveRequested: (port) {
+                                              if (_sessions[port]?.isRunning ==
+                                                      true ||
+                                                  _rebootWorkers.containsKey(
+                                                    port,
+                                                  )) {
+                                                return;
+                                              }
                                               setState(() {
-                                                _sessions.remove(port);
+                                                _sessions
+                                                    .remove(port)
+                                                    ?.dispose();
                                               });
                                             },
                                           );

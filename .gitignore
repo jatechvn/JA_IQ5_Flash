@@ -53,3 +53,6 @@ license.key
 skills/
 *.skill
 
+
+# Previous distributions preserved by build.bat
+backup/

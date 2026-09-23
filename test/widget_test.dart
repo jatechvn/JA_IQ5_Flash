@@ -93,8 +93,9 @@ void main() {
         // Create required files
         File(
           '${tempDir.path}/rawprogram_unsparse0.xml',
-        ).writeAsStringSync('<xml/>');
-        File('${tempDir.path}/patch0.xml').writeAsStringSync('<xml/>');
+        ).writeAsStringSync('<data><program filename="boot.img"/></data>');
+        File('${tempDir.path}/boot.img').writeAsStringSync('image');
+        File('${tempDir.path}/patch0.xml').writeAsStringSync('<patches/>');
         File(
           '${tempDir.path}/prog_firehose_ddr.elf',
         ).writeAsStringSync('binary');

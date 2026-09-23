@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:io';
+import 'package:path/path.dart' as p;
+import '../constants.dart';
 // lib/modules/logic/flash_session.dart
 import 'package:flutter/foundation.dart';
 import 'device_manager.dart';
@@ -21,6 +25,34 @@ class FlashSession extends ChangeNotifier {
   QfilEngine? _engine;
   bool _active = false;
   bool _disposed = false;
+  bool connected = true;
+  bool _connectionLost = false;
+  Timer? _updateTimer;
+  IOSink? _sessionLog;
+
+  void disconnected() {
+    connected = false;
+    if (_active && _engine?.phase != 'resetting') {
+      _connectionLost = true;
+      _engine?.abort();
+      appendLog('Device disconnected before reset; flash stopped.', 'error');
+    }
+    notifyListeners();
+  }
+
+  void _scheduleUpdate() {
+    if (_disposed) return;
+    _updateTimer ??= Timer(const Duration(milliseconds: 100), () {
+      _updateTimer = null;
+      notifyListeners();
+    });
+  }
+
+  void _record(String message) {
+    logs.add(message);
+    if (logs.length > 1000) logs.removeRange(0, logs.length - 1000);
+    _sessionLog?.writeln('${DateTime.now().toIso8601String()} $message');
+  }
 
   // Global callbacks to notify MainWindow
   void Function(String port, int progress)? onProgressChanged;
@@ -37,6 +69,7 @@ class FlashSession extends ChangeNotifier {
     this.onDone,
   });
 
+  bool get isQueued => _active && _engine?.phase == 'queued';
   String get port => device.port;
   String get status => _status;
   int get progress => _progress;
@@ -50,6 +83,7 @@ class FlashSession extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _updateTimer?.cancel();
     _engine?.abort();
     onProgressChanged = null;
     onLogMessage = null;
@@ -65,8 +99,8 @@ class FlashSession extends ChangeNotifier {
 
   /// Append log to session.
   void appendLog(String message, [String level = 'info']) {
-    logs.add(message);
-    notifyListeners();
+    _record(message);
+    _scheduleUpdate();
   }
 
   /// Aborts the running flash session.
@@ -79,7 +113,8 @@ class FlashSession extends ChangeNotifier {
 
   /// Start the flashing process.
   Future<bool> start({String? firmwareDirectory}) async {
-    if (_disposed || isRunning) return false;
+    if (_disposed || isRunning || !connected) return false;
+    _connectionLost = false;
     _active = true;
     _status = statusRunning;
     _progress = 0;
@@ -103,17 +138,32 @@ class FlashSession extends ChangeNotifier {
             helloMode: device.saharaMode,
           );
 
+      if (engineFactory == null) {
+        try {
+          final directory = Directory(p.join(baseDir, 'logs'))
+            ..createSync(recursive: true);
+          _sessionLog = File(
+            p.join(directory.path, 'flash_${port}_${_engine!.runId}.log'),
+          ).openWrite();
+          unawaited(_sessionLog!.done.catchError((Object _) {}));
+          _record('Firmware: ${firmwareDirectory ?? fwDir}');
+        } catch (error) {
+          onLogMessage?.call(port, 'Cannot open session log: $error', 'warn');
+        }
+      }
       success = await _engine!.run(
         onProgress: (pct) {
+          if (_disposed || _connectionLost || _status == statusAborted) return;
           _progress = pct;
-          notifyListeners();
+          _scheduleUpdate();
           if (onProgressChanged != null) {
             onProgressChanged!(port, pct);
           }
         },
         onLog: (msg, lvl) {
-          logs.add(msg);
-          notifyListeners();
+          if (_disposed) return;
+          _record(msg);
+          _scheduleUpdate();
           if (onLogMessage != null) {
             onLogMessage!(port, msg, lvl);
           }
@@ -125,13 +175,36 @@ class FlashSession extends ChangeNotifier {
       );
     } catch (error) {
       summary = 'Flash error: $error';
-      logs.add(summary);
+      _record(summary);
       onLogMessage?.call(port, summary, 'error');
     } finally {
+      _updateTimer?.cancel();
+      _updateTimer = null;
+      if (_sessionLog != null) {
+        try {
+          _record(
+            'Result: ${_connectionLost
+                ? 'disconnected'
+                : _status == statusAborted
+                ? 'aborted'
+                : success
+                ? 'success'
+                : 'failed'} $summary',
+          );
+          await _sessionLog!.flush();
+          await _sessionLog!.close();
+        } catch (error) {
+          onLogMessage?.call(port, 'Session log write failed: $error', 'warn');
+        }
+        _sessionLog = null;
+      }
       _active = false;
       _engine = null;
     }
-    if (_status == statusAborted || _disposed) success = false;
+    if (_status == statusAborted || _disposed || _connectionLost) {
+      success = false;
+    }
+    if (_connectionLost) summary = 'Device disconnected before reset';
     if (_status != statusAborted) {
       _status = success ? statusSuccess : statusError;
     }

@@ -71,7 +71,9 @@ class _DeviceCardState extends State<DeviceCard> {
         if (status == FlashSession.statusRunning) {
           statusIcon = Icons.bolt_rounded;
           statusColor = c.accentCyan;
-          statusLabel = '${tr('card_flashing')} $progress%';
+          statusLabel = session.isQueued
+              ? tr('card_queued')
+              : '${tr('card_flashing')} $progress%';
           glow = c.accentCyan;
         } else if (status == FlashSession.statusSuccess) {
           statusIcon = Icons.check_circle_rounded;
@@ -95,9 +97,17 @@ class _DeviceCardState extends State<DeviceCard> {
           glow = c.accentAmber;
         }
 
+        if (!session.connected && !session.isRunning) {
+          statusLabel = '$statusLabel • ${tr('card_offline')}';
+        }
+
         final isBusy =
             status == FlashSession.statusRunning || status == 'rebooting';
-        final isManualDisabled = widget.autoFlashLocked || isBusy;
+        final isManualDisabled =
+            widget.autoFlashLocked ||
+            isBusy ||
+            session.isRunning ||
+            !session.connected;
 
         return BentoCard(
           colors: c,
@@ -188,7 +198,9 @@ class _DeviceCardState extends State<DeviceCard> {
                     if (!widget.autoFlashLocked) ...[
                       const SizedBox(width: 5),
                       InkWell(
-                        onTap: () => widget.onRemoveRequested(session.port),
+                        onTap: isBusy || session.isRunning
+                            ? null
+                            : () => widget.onRemoveRequested(session.port),
                         borderRadius: BorderRadius.circular(15),
                         child: Container(
                           width: 20,
