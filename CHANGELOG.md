@@ -2,6 +2,30 @@
 
 All notable changes to **JA IQ5 Reflash** will be documented in this file.
 
+## [v1.3.2] - 2026-10-03
+
+### 🚀 Nâng cấp & Tính năng mới
+- **🏷️ Chuẩn hóa Tiêu đề Cửa sổ & Windows PE Metadata:**
+  - Đồng bộ tiêu đề cửa sổ hiển thị tên ứng dụng đầy đủ **"JA IQ5 Reflash"** trên mọi phiên bản Windows 10 và Windows 11 thay vì hiển thị tên file `.exe` (`ja_iq5_flash.exe`).
+  - Cập nhật toàn diện metadata file thực thi Windows PE (`Runner.rc`): `FileDescription`, `ProductName`, `InternalName`, và `CompanyName` thành "JA IQ5 Reflash" và "JATech VN", giúp Task Manager, Explorer Properties và Alt+Tab hiển thị tên ứng dụng thân thiện, chuyên nghiệp.
+  - Bổ sung cơ chế `SetWindowText` và fallback tìm handle cửa sổ trong `lib/main.dart` để duy trì tiêu đề nhất quán.
+- **🎨 Logo Ứng dụng Chính thức (Official App Brand Icon):**
+  - Tích hợp biểu tượng thương hiệu chính thức (vòng năng lượng neon công nghệ cao với tia sét và chữ IQ5 sắc nét).
+  - Áp dụng vào icon thực thi Windows `.exe` (`windows/runner/resources/app_icon.ico`) và shortcut Windows (`install.bat`).
+  - Hiển thị logo thương hiệu trên thanh Top Header Bar và thẻ About trong hộp thoại Cài đặt.
+
+### 🐛 Sửa lỗi & Tối ưu hóa
+- **⚡ Tối ưu Bộ tiền kiểm & Động cơ Nạp Firmware (Preflight & QFIL Engine):**
+  - Cải thiện độ ổn định khi phân tích cấu trúc tệp firmware và kiểm tra khả năng tương thích trước khi nạp (`firmware_preflight.dart`, `qfil_engine.dart`).
+  - Tối ưu luồng khởi động lại thiết bị và xử lý ngoại lệ vòng đời nạp (`reboot_worker.dart`, `flash_stability_test.dart`).
+- **🧪 Xác minh Toàn diện:**
+  - Đảm bảo 100% kiểm thử tự động thành công (81/81 tests passing).
+
+### 📦 Phát hành
+- Đồng bộ phiên bản 1.3.2+5 trong `pubspec.yaml`, `constants.dart`, `Runner.rc`, `ABOUT.txt`, `install.bat`, `README.md`, `USERGUIDE.md`, `RELEASE_NOTES.md`.
+
+---
+
 ## [v1.3.1] - 2026-09-23
 
 ### 🚀 Nâng cấp & Tính năng mới

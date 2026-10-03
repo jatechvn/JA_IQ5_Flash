@@ -87,7 +87,7 @@ void main() {
       final vNull = SemanticVersion.tryParse(null);
       expect(vNull, isNull);
 
-      expect(appVersion, equals('1.3.1+4'));
+      expect(appVersion, equals('1.3.2+5'));
     });
 
     test('SemanticVersion comparison operators work correctly', () {

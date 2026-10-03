@@ -147,9 +147,7 @@ class RebootWorker {
     log(tr('log_reboot_path_b'), 'warn');
     resetting = true;
     final targetPort = port;
-    final (ok, msg) = await Isolate.run(
-      () => saharaResetPort(targetPort, manageService: false),
-    );
+    final (ok, msg) = await _resetInBackground(targetPort);
     if (_aborted) return (false, 'Aborted');
     if (ok) {
       log(tr('log_reboot_reset_ok'), 'success');
@@ -165,3 +163,6 @@ class RebootWorker {
     }
   }
 }
+
+Future<(bool, String)> _resetInBackground(String port) =>
+    Isolate.run(() => saharaResetPort(port, manageService: false));

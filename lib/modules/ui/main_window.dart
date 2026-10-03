@@ -1329,11 +1329,6 @@ class _MainWindowState extends State<MainWindow> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [c.accentCyan, c.accentColor],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
@@ -1343,10 +1338,27 @@ class _MainWindowState extends State<MainWindow> {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.bolt_rounded,
-                      color: Colors.white,
-                      size: 20,
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [c.accentCyan, c.accentColor],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.bolt_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),

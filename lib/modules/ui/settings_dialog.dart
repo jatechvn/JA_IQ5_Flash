@@ -1060,9 +1060,6 @@ class _SettingsAboutTab extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [colors.accentColor, colors.accentCyan],
-                    ),
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
@@ -1071,13 +1068,28 @@ class _SettingsAboutTab extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Center(
-                    child: Text(
-                      'JA',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 44,
+                    height: 44,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [colors.accentColor, colors.accentCyan],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'JA',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 18,
+                          ),
+                        ),
                       ),
                     ),
                   ),

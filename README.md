@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.3.1-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.3.2-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
@@ -223,6 +223,15 @@ mesh_orb_opacity = 0.24
 
 See full release history and notes in [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.3.2 (2026-10-03)**:
+  - Synchronized window title to full App Name "JA IQ5 Reflash" across Windows 10/11.
+  - Windows PE metadata normalization in `Runner.rc` (`FileDescription`, `ProductName`, `InternalName`).
+  - Added official high-tech application brand logo for executable, taskbar, desktop shortcut, header bar, and about tab.
+  - Preflight validation and device reboot worker stability improvements.
+  - 81 passing automated tests (100% green).
+- **v1.3.1 (2026-09-23)**:
+  - Standardized 6-step build script (`build.bat`) with automated task kill and foreground window activation.
+  - OneDrive folder lock workaround and Robocopy integration.
 - **v1.3.0 (2026-09-21)**:
   - Complete LAN Over-The-Air (OTA) Update System (`OtaUpdateService` + `update_config.json`).
   - Interactive Bento Frosted Glass Update Modal (`GlassUpdateDialog`) with release notes and progress.

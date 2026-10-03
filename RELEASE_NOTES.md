@@ -1,21 +1,21 @@
-TAG=v1.3.1
-TITLE=JA IQ5 Reflash v1.3.1 - Standard Build Script & Robust Packaging Engine
+TAG=v1.3.2
+TITLE=JA IQ5 Reflash v1.3.2 - Window Title & PE Metadata Normalization & Official App Icon
 BODY=
-# ⚡ JA IQ5 Reflash v1.3.1
+# ⚡ JA IQ5 Reflash v1.3.2
 
 ### 🚀 Major Enhancements & Bug Fixes
-- **🛠️ Standard 6-Step Build Script (`build.bat` aligned with JA LAN Messenger):**
-  - **Automated Process Termination**: Terminates lingering `ja_iq5_flash.exe` before compiling to eliminate file lock conflicts.
-  - **Release Mode Compilation**: Compiles Flutter Windows Desktop in Release mode with immediate error status reporting.
-  - **Robust Asset Synchronization via Robocopy**: Synchronizes `bin/` (`fh_loader.exe`, `xerces-c_3_1.dll`, `msvcr100.dll`), `i18n/`, `assets/`, debug tools, Windows installer trio (`install.bat`, `uninstall.bat`, `uninstall.ps1`), and all project documentation without `Access denied` errors.
-  - **Integrated PowerShell Packager (`windows\packaging\package_dist.ps1`)**: Verifies binary `ProductVersion` against `pubspec.yaml`, checks runtime dependencies, bundles parent-folder ZIP, checks SHA256 archive hashes, and generates `version.json` for LAN OTA updates.
-  - **Automated Root Shortcut**: Generates `.Release - Shortcut.lnk` directly at project root.
-  - **Foreground Active Window**: Automatically opens and brings the Release directory to the top (`Foreground Window`) upon successful compilation.
-  - **Headless Execution Support**: Supports `--no-pause` parameter for CI/CD and `/gitpush` automation pipelines.
-- **🔒 OneDrive Folder Locking Resolution**:
-  - Implemented intelligent fallback synchronization for `dist/`: When OneDrive sync or Windows Explorer holds a folder handle on `dist/`, the packager seamlessly syncs files directly without aborting, while preserving user configurations (`config.ini`, `license.key`, `logs/`) and storing a snapshot in `backup/`.
-- **🧪 Comprehensive Testing Suite**:
-  - All 81 automated tests passing with 100% green coverage.
+- **🏷️ Window Title & Windows PE Metadata Normalization:**
+  - Synchronized window title to consistently display full application name **"JA IQ5 Reflash"** across all Windows 10 & 11 versions instead of binary executable name (`ja_iq5_flash.exe`).
+  - Updated PE resource metadata (`Runner.rc`): `FileDescription`, `ProductName`, `InternalName`, and `CompanyName` set to "JA IQ5 Reflash" and "JATech VN", ensuring Task Manager, Explorer Properties, and Alt+Tab display professional application branding.
+  - Added native `SetWindowText` synchronization with fallback handle resolution in `lib/main.dart`.
+- **🎨 Official High-Tech Application Logo & App Icon:**
+  - Integrated official brand icon (cybernetic energy ring with neon lightning bolt and sharp IQ5 emblem).
+  - Applied to Windows executable binary (`windows/runner/resources/app_icon.ico`) and installer shortcut definitions (`install.bat`).
+  - Added brand logo rendering to Top Header Bar and Settings About Tab.
+- **⚡ Firmware Preflight & QFIL Engine Stability:**
+  - Refined firmware structure preflight validation and device reboot retry mechanics (`firmware_preflight.dart`, `qfil_engine.dart`, `reboot_worker.dart`).
+- **🧪 100% Verification Suite Pass:**
+  - All 81 automated tests passing with zero errors.
 
 ### 📦 Artifacts Included
-- `JA_IQ5_Flash_v1.3.1_Windows_x64.zip`: Standalone portable bundle with embedded Qualcomm EDL binaries (`fh_loader.exe`), 1-click Windows installer/uninstaller, multilingual assets, documentation, and debug tools.
+- `JA_IQ5_Flash_v1.3.2_Windows_x64.zip`: Standalone portable bundle with embedded Qualcomm EDL binaries (`fh_loader.exe`), 1-click Windows installer/uninstaller, multilingual assets, documentation, and debug tools.

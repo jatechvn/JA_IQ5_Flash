@@ -1,3 +1,4 @@
+import 'dart:isolate';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart';
@@ -60,3 +61,7 @@ List<String> validateFirmware(String directory) {
   }
   return errors;
 }
+
+// Keep the isolate closure outside engine/session callback scopes.
+Future<List<String>> validateFirmwareInBackground(String directory) =>
+    Isolate.run(() => validateFirmware(directory));

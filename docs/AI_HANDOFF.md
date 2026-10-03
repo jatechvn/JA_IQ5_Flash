@@ -34,3 +34,11 @@ No version bump, commit, tag, push, ZIP or GitHub release was requested/performe
 - Current AOT, Release and dist app.so hashes were identical (0C202755DA3D550401CAC9E36BF8980C5171EFA3F4586C35E20787CDFAD7D612); 14:40:22 timestamp alone was not evidence of stale copying.
 - Real Flutter build and ZIP validation passed. Promotion of staged output into dist was blocked by a Windows directory lock; existing dist was not replaced. Verified ZIP remains under dist_pack/20260923_153348_4214/JA_IQ5_Flash_v1.3.0_Windows_x64/. Close the process holding dist before rerunning build.bat.
 - Isolated fixture packaging passed: ZIP/hash checks, runtime config exclusion, old-dist preservation, hash mismatch rejection and unchanged dist after failure. The real .Release.lnk target was read back and points to build/windows/x64/runner/Release.
+
+## 2026-10-03: isolate closure regression
+
+- Reproduced reported QfilEngine preflight failure with a real IOSink captured by onLog/onDone. Before fix, regression returned Illegal argument in isolate message / unsendable _AsyncCompleter.
+- Moved preflight Isolate.run into a top-level helper taking only a directory string; engine callback/session context no longer crosses the isolate boundary. Applied the same scope isolation to reboot Sahara reset. Added missing adb_rebooting_log translations.
+- Formatting and analyzer passed; focused flash stability/lifecycle/fastboot suites passed 35/35. Test uses missing firmware in a temporary directory and stops before service/hardware operations.
+- Existing dirty build.bat, main_window.dart, settings_dialog.dart, pubspec.yaml, icon and assets changes preserved. Real IQ5 flash remains untested; dist is not replaced by this fix.
+- Windows Release rebuild succeeded after the fix (38.5s): build/windows/x64/runner/Release/ja_iq5_flash.exe. Run this Release bundle, not the unchanged dist copy.

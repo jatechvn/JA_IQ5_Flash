@@ -8,6 +8,28 @@ import 'package:ja_iq5_flash/modules/logic/qfil_engine.dart';
 import 'package:ja_iq5_flash/modules/logic/firmware_slot.dart';
 
 void main() {
+  test('engine preflight does not send callback IOSink into isolate', () async {
+    final dir = Directory.systemTemp.createTempSync('iq5_isolate_');
+    final sink = File('${dir.path}/session.log').openWrite();
+    try {
+      String? summary;
+      final ok = await QfilEngine(port: 'INVALID_TEST_PORT', fwDir: dir.path)
+          .run(
+            onLog: (message, level) => sink.writeln(message),
+            onDone: (_, message) {
+              summary = message;
+              sink.writeln(message);
+            },
+          );
+      expect(ok, isFalse);
+      expect(summary, contains('Missing or empty:'));
+      expect(summary, isNot(contains('unsendable')));
+    } finally {
+      await sink.close();
+      dir.deleteSync(recursive: true);
+    }
+  });
+
   test('cancelled queued engine never starts preflight or hardware', () async {
     final gate = Completer<void>();
     final first = DeviceOperationQueue.shared.run(() => gate.future);

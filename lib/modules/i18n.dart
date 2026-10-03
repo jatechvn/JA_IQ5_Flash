@@ -413,6 +413,11 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Phát hiện thiết bị EDL mới: {port}',
     'CN': '检测到新的 EDL 设备: {port}',
   },
+  'adb_rebooting_log': {
+    'EN': 'Sending ADB reboot EDL: {serial}',
+    'VI': 'Đang gửi lệnh ADB reboot EDL: {serial}',
+    'CN': '正在发送 ADB 重启 EDL 命令：{serial}',
+  },
   'log_edl_disconnected': {
     'EN': 'EDL device disconnected: {port}',
     'VI': 'Thiết bị EDL đã ngắt kết nối: {port}',

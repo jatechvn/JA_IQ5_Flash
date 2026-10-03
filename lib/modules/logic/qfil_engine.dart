@@ -1,5 +1,4 @@
 // lib/modules/logic/qfil_engine.dart
-import 'dart:isolate';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
@@ -63,7 +62,7 @@ class QfilEngine {
       if (_aborted) return _abortedResult(onLog, onDone);
       try {
         final directory = fwDir;
-        final errors = await Isolate.run(() => validateFirmware(directory));
+        final errors = await validateFirmwareInBackground(directory);
         if (_aborted) return _abortedResult(onLog, onDone);
         if (errors.isNotEmpty) return _fail(errors.join('\n'), onLog, onDone);
         return await withQualcommService(() async {

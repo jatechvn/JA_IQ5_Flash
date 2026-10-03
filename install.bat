@@ -109,9 +109,13 @@ echo [5/5] Registering application in Windows Control Panel...
 set "REG_KEY=HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\JA_IQ5_Flash"
 
 reg add "%REG_KEY%" /v "DisplayName" /t REG_SZ /d "JA IQ5 Reflash" /f >nul
-reg add "%REG_KEY%" /v "DisplayVersion" /t REG_SZ /d "1.3.0" /f >nul
+reg add "%REG_KEY%" /v "DisplayVersion" /t REG_SZ /d "1.3.2" /f >nul
 reg add "%REG_KEY%" /v "Publisher" /t REG_SZ /d "JATech VN" /f >nul
-reg add "%REG_KEY%" /v "DisplayIcon" /t REG_SZ /d "%TARGET_DIR%\ja_iq5_flash.exe,0" /f >nul
+if exist "%TARGET_DIR%\app_icon.ico" (
+    reg add "%REG_KEY%" /v "DisplayIcon" /t REG_SZ /d "%TARGET_DIR%\app_icon.ico" /f >nul
+) else (
+    reg add "%REG_KEY%" /v "DisplayIcon" /t REG_SZ /d "%TARGET_DIR%\ja_iq5_flash.exe,0" /f >nul
+)
 reg add "%REG_KEY%" /v "InstallLocation" /t REG_SZ /d "%TARGET_DIR%" /f >nul
 reg add "%REG_KEY%" /v "HelpLink" /t REG_SZ /d "https://github.com/jatechvn/JA_IQ5_Flash" /f >nul
 reg add "%REG_KEY%" /v "URLInfoAbout" /t REG_SZ /d "https://github.com/jatechvn/JA_IQ5_Flash" /f >nul

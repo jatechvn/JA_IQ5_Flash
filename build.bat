@@ -51,6 +51,7 @@ if exist "%~dp0uninstall.bat" (
     echo       - Da chep uninstall.bat vao thu muc Release.
 )
 if exist "%~dp0ABOUT.txt" copy /y "%~dp0ABOUT.txt" "%TARGET_DIR%\" >nul
+if exist "%~dp0windows\runner\resources\app_icon.ico" copy /y "%~dp0windows\runner\resources\app_icon.ico" "%TARGET_DIR%\app_icon.ico" >nul
 copy /y "%~dp0uninstall.ps1" "%TARGET_DIR%\uninstall.ps1" >nul
 if errorlevel 1 (
     echo [ERROR] Cannot package uninstall.ps1.

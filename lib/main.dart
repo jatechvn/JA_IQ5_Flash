@@ -86,8 +86,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       final className = 'FLUTTER_RUNNER_WIN32_WINDOW'.toNativeUtf16();
       final windowName = appName.toNativeUtf16();
       try {
-        final hwnd = FindWindow(className, windowName);
+        var hwnd = FindWindow(className, windowName);
+        if (hwnd == 0) {
+          hwnd = FindWindow(className, nullptr);
+        }
         if (hwnd != 0) {
+          SetWindowText(hwnd, windowName);
           final pvAttribute = calloc<BOOL>()
             ..value = widget.theme.isDark ? TRUE : FALSE;
           DwmSetWindowAttribute(
