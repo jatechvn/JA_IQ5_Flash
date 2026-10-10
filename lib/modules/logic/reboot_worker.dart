@@ -36,7 +36,7 @@ class RebootWorker {
       } catch (error) {
         return (false, 'Reboot failed: $error');
       }
-    });
+    }, port: port.toUpperCase());
   }
 
   Future<(bool, String)> _run({void Function(String, String)? onLog}) async {

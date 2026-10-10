@@ -8,6 +8,129 @@ import 'package:ja_iq5_flash/modules/logic/qfil_engine.dart';
 import 'package:ja_iq5_flash/modules/logic/firmware_slot.dart';
 
 void main() {
+  test(
+    'concurrency limits change without interrupting active devices',
+    () async {
+      final queue = DeviceOperationQueue(maxConcurrent: 2);
+      final gates = List.generate(4, (_) => Completer<void>());
+      final started = <int>[];
+      final jobs = List.generate(
+        4,
+        (i) => queue.run(() async {
+          started.add(i);
+          await gates[i].future;
+        }, port: 'COM$i'),
+      );
+      expect(started, [0, 1]);
+      queue.maxConcurrent = 1;
+      gates[0].complete();
+      await jobs[0];
+      expect(started, [0, 1]);
+      queue.maxConcurrent = 3;
+      expect(started, [0, 1, 2, 3]);
+      for (final gate in gates.skip(1)) {
+        gate.complete();
+      }
+      await Future.wait(jobs);
+      queue.maxConcurrent = 99;
+      expect(queue.maxConcurrent, 8);
+      queue.maxConcurrent = 0;
+      expect(queue.maxConcurrent, 1);
+    },
+  );
+
+  test(
+    'failure frees a slot and busy ports do not block other ports',
+    () async {
+      final queue = DeviceOperationQueue(maxConcurrent: 2);
+      final gate = Completer<void>();
+      final started = <String>[];
+      final first = queue.run(() async {
+        started.add('first');
+        await gate.future;
+        throw StateError('fixture');
+      }, port: 'com1');
+      final failure = expectLater(first, throwsStateError);
+      final same = queue.run(() async {
+        started.add('same');
+      }, port: 'COM1');
+      final other = queue.run(() async {
+        started.add('other');
+      }, port: 'COM2');
+      await other;
+      expect(started, ['first', 'other']);
+      gate.complete();
+      await failure;
+      await same;
+      expect(started, ['first', 'other', 'same']);
+    },
+  );
+
+  test('different COM ports overlap while same COM waits', () async {
+    final queue = DeviceOperationQueue();
+    final gate = Completer<void>();
+    final started = <String>[];
+    final first = queue.run(() async {
+      started.add('57');
+      await gate.future;
+    }, port: 'COM57');
+    final second = queue.run(() async {
+      started.add('58');
+      await gate.future;
+    }, port: 'COM58');
+    final same = queue.run(() async {
+      started.add('57-next');
+    }, port: 'COM57');
+    await Future<void>.delayed(Duration.zero);
+    expect(started, ['57', '58']);
+    gate.complete();
+    await Future.wait([first, second, same]);
+    expect(started, ['57', '58', '57-next']);
+  });
+
+  test(
+    'service stays stopped until last concurrent operation finishes',
+    () async {
+      final calls = <String>[];
+      var queries = 0;
+      final service = QualcommServiceCoordinator(
+        commandRunner: (_, args) async {
+          calls.add(args.first);
+          return ProcessResult(
+            0,
+            0,
+            args.first == 'query' ? 'STATE : ${queries++ == 0 ? 4 : 1}' : '',
+            '',
+          );
+        },
+      );
+      final firstGate = Completer<void>();
+      final secondGate = Completer<void>();
+      var active = 0;
+      final first = service.run(() async {
+        active++;
+        await firstGate.future;
+        throw StateError('cancelled fixture');
+      });
+      final failed = expectLater(first, throwsStateError);
+      final second = service.run(() async {
+        active++;
+        await secondGate.future;
+        return true;
+      });
+      await Future<void>.delayed(Duration.zero);
+      expect(active, 2);
+      expect(calls, ['query', 'stop', 'query']);
+      firstGate.complete();
+      await failed;
+      expect(calls, isNot(contains('start')));
+      secondGate.complete();
+      expect(await second, isTrue);
+      expect(calls, ['query', 'stop', 'query', 'start']);
+    },
+    skip: !Platform.isWindows,
+  );
+
   test('engine preflight does not send callback IOSink into isolate', () async {
     final dir = Directory.systemTemp.createTempSync('iq5_isolate_');
     final sink = File('${dir.path}/session.log').openWrite();
@@ -32,7 +155,10 @@ void main() {
 
   test('cancelled queued engine never starts preflight or hardware', () async {
     final gate = Completer<void>();
-    final first = DeviceOperationQueue.shared.run(() => gate.future);
+    final first = DeviceOperationQueue.shared.run(
+      () => gate.future,
+      port: 'TEST',
+    );
     final engine = QfilEngine(port: 'TEST', fwDir: 'not-a-firmware');
     final pending = engine.run();
     engine.abort();

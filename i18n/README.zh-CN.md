@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.3.2-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.4.0-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
@@ -145,6 +145,17 @@ build.bat
 
 完整历史记录请参阅 [CHANGELOG.md](../CHANGELOG.md)。
 
+- **v1.4.0 (2026-10-10)**:
+  - 深度 GPU/CPU 电源管理优化 (`AppPowerManager`)：窗口失去焦点或最小化时彻底终止高负载动态渲染。
+  - 运动矢量方向记忆 (Direction Preservation)：MeshOrb 恢复时自动保持原始方向顺畅流动。
+  - 空闲挂机休眠模式 (Idle Sleep Mode)：无操作 12s/30s/60s 后进入休眠，交互操作 250ms 节流即时唤醒。
+  - 会话周期令牌 (Session Epoch Guard)：彻底杜绝插槽与主题切换时的计时器/跑马灯泄漏与偏移错位。
+  - 端口并发租约强化 (Concurrency Lease) 及 Win32 原生焦点 `WA_INACTIVE` 修复。
+  - 97 项自动化测试全量通过 (100% 绿色通过)。
+- **v1.3.2 (2026-10-03)**:
+  - 规范化 Windows 10/11 窗口标题为应用完整名称 "JA IQ5 Reflash"。
+  - 全面更新 Windows PE 执行文件元数据 (`Runner.rc`)，规范任务管理器与属性展示。
+  - 正式上线赛博朋克官方高科技应用徽标，涵盖执行文件、快捷方式、任务栏与关于弹窗。
 - **v1.3.0 (2026-09-21)**:
   - 完整接入局域网 OTA 自动在线更新体系 (`OtaUpdateService` + `update_config.json`)。
   - 全新现代 Bento 毛玻璃更新对话框 (`GlassUpdateDialog`)，实时展示双版本对比、更新日志与下载百分比。

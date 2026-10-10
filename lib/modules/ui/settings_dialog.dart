@@ -7,7 +7,9 @@ import 'package:flutter/services.dart';
 
 import '../constants.dart';
 import '../i18n.dart';
+import '../logic/operation_support.dart';
 import '../ja_license_checker.dart';
+import '../services/app_power_manager.dart';
 import '../services/ota_update_service.dart';
 import 'app_colors.dart';
 import 'glass_update_dialog.dart';
@@ -56,6 +58,9 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
   late double _dialogOpacity;
   late bool _enableMeshOrbs;
   late double _meshOrbOpacity;
+  late bool _tempEnableIdleSleep;
+  late int _tempIdleTimeoutSeconds;
+  late int _tempFlashConcurrency;
 
   // Original tuning values for cancellation rollback (matching JA_MES_Tool)
   late final double _origCardBlur;
@@ -65,6 +70,8 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
   late final bool _origEnableMeshOrbs;
   late final double _origMeshOrbOpacity;
   late final PerfTierMode _origPerfMode;
+  late final bool _origEnableIdleSleep;
+  late final int _origIdleTimeoutSeconds;
 
   // OTA update controllers
   late final TextEditingController _otaServerPathController;
@@ -84,6 +91,8 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
     _origEnableMeshOrbs = t.enableMeshOrbs;
     _origMeshOrbOpacity = t.meshOrbOpacity;
     _origPerfMode = t.perfMode;
+    _origEnableIdleSleep = AppPowerManager.instance.enableIdleSleep;
+    _origIdleTimeoutSeconds = AppPowerManager.instance.idleTimeout.inSeconds;
 
     _cardBlur = _origCardBlur;
     _cardOpacity = _origCardOpacity;
@@ -91,6 +100,9 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
     _dialogOpacity = _origDialogOpacity;
     _enableMeshOrbs = _origEnableMeshOrbs;
     _meshOrbOpacity = _origMeshOrbOpacity;
+    _tempEnableIdleSleep = _origEnableIdleSleep;
+    _tempIdleTimeoutSeconds = _origIdleTimeoutSeconds;
+    _tempFlashConcurrency = DeviceOperationQueue.shared.maxConcurrent;
 
     final otaConfig = OtaUpdateService().currentConfig;
     _otaServerPathController = TextEditingController(
@@ -130,6 +142,10 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
       meshOrbOpacity: _origMeshOrbOpacity,
     );
     widget.theme.setPerfTierMode(_origPerfMode);
+    AppPowerManager.instance.setEnableIdleSleep(_origEnableIdleSleep);
+    AppPowerManager.instance.setIdleTimeout(
+      Duration(seconds: _origIdleTimeoutSeconds),
+    );
     Navigator.pop(context, false);
   }
 
@@ -142,6 +158,11 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
       _dialogOpacity = widget.theme.dialogOpacity;
       _enableMeshOrbs = widget.theme.enableMeshOrbs;
       _meshOrbOpacity = widget.theme.meshOrbOpacity;
+      _tempEnableIdleSleep = true;
+      _tempIdleTimeoutSeconds = 12;
+      _tempFlashConcurrency = 2;
+      AppPowerManager.instance.setEnableIdleSleep(true);
+      AppPowerManager.instance.setIdleTimeout(const Duration(seconds: 12));
     });
   }
 
@@ -268,6 +289,12 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
                     const SizedBox(width: 10),
                     ElevatedButton.icon(
                       onPressed: () {
+                        AppPowerManager.instance.setEnableIdleSleep(
+                          _tempEnableIdleSleep,
+                        );
+                        AppPowerManager.instance.setIdleTimeout(
+                          Duration(seconds: _tempIdleTimeoutSeconds),
+                        );
                         unawaited(
                           OtaUpdateService().saveExternalConfigFile(
                             OtaUpdateConfig(
@@ -284,6 +311,8 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
                             ),
                           ),
                         );
+                        DeviceOperationQueue.shared.maxConcurrent =
+                            _tempFlashConcurrency;
                         if (widget.onConfigSaved != null) {
                           widget.onConfigSaved!();
                         }
@@ -343,6 +372,11 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
           dialogOpacity: _dialogOpacity,
           enableMeshOrbs: _enableMeshOrbs,
           meshOrbOpacity: _meshOrbOpacity,
+          enableIdleSleep: _tempEnableIdleSleep,
+          idleTimeoutSeconds: _tempIdleTimeoutSeconds,
+          flashConcurrency: _tempFlashConcurrency,
+          onFlashConcurrencyChanged: (v) =>
+              setState(() => _tempFlashConcurrency = v),
           onPerfTierChanged: _onPerfTierChanged,
           onCardBlurChanged: (v) {
             setState(() => _cardBlur = v);
@@ -367,6 +401,14 @@ class _SettingsDialogContentState extends State<_SettingsDialogContent> {
           onMeshOrbOpacityChanged: (v) {
             setState(() => _meshOrbOpacity = v);
             t.setLiveGlassmorphism(meshOrbOpacity: v);
+          },
+          onIdleSleepToggled: (v) {
+            setState(() => _tempEnableIdleSleep = v);
+            AppPowerManager.instance.setEnableIdleSleep(v);
+          },
+          onIdleTimeoutChanged: (v) {
+            setState(() => _tempIdleTimeoutSeconds = v);
+            AppPowerManager.instance.setIdleTimeout(Duration(seconds: v));
           },
           onResetDefaults: _resetDefaults,
         );
@@ -486,6 +528,10 @@ class _SettingsGlassTuningTab extends StatelessWidget {
   final double dialogOpacity;
   final bool enableMeshOrbs;
   final double meshOrbOpacity;
+  final bool enableIdleSleep;
+  final int idleTimeoutSeconds;
+  final int flashConcurrency;
+  final ValueChanged<int> onFlashConcurrencyChanged;
   final ValueChanged<PerfTierMode>? onPerfTierChanged;
   final ValueChanged<double> onCardBlurChanged;
   final ValueChanged<double> onCardOpacityChanged;
@@ -493,6 +539,8 @@ class _SettingsGlassTuningTab extends StatelessWidget {
   final ValueChanged<double> onDialogOpacityChanged;
   final ValueChanged<bool> onMeshOrbsToggled;
   final ValueChanged<double> onMeshOrbOpacityChanged;
+  final ValueChanged<bool> onIdleSleepToggled;
+  final ValueChanged<int> onIdleTimeoutChanged;
   final VoidCallback onResetDefaults;
 
   const _SettingsGlassTuningTab({
@@ -504,6 +552,10 @@ class _SettingsGlassTuningTab extends StatelessWidget {
     required this.dialogOpacity,
     required this.enableMeshOrbs,
     required this.meshOrbOpacity,
+    required this.enableIdleSleep,
+    required this.idleTimeoutSeconds,
+    required this.flashConcurrency,
+    required this.onFlashConcurrencyChanged,
     this.onPerfTierChanged,
     required this.onCardBlurChanged,
     required this.onCardOpacityChanged,
@@ -511,6 +563,8 @@ class _SettingsGlassTuningTab extends StatelessWidget {
     required this.onDialogOpacityChanged,
     required this.onMeshOrbsToggled,
     required this.onMeshOrbOpacityChanged,
+    required this.onIdleSleepToggled,
+    required this.onIdleTimeoutChanged,
     required this.onResetDefaults,
   });
 
@@ -572,6 +626,48 @@ class _SettingsGlassTuningTab extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Hardware Profiling & Graphic Performance Tier Section
+            Text(
+              tr('settings_flash_concurrency'),
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: List.generate(
+                maxDevices,
+                (i) => ChoiceChip(
+                  key: ValueKey('flash-concurrency-${i + 1}'),
+                  selected: flashConcurrency == i + 1,
+                  onSelected: (_) => onFlashConcurrencyChanged(i + 1),
+                  selectedColor: colors.accentCyan.withValues(alpha: 0.18),
+                  backgroundColor: colors.headerBg.withValues(alpha: 0.35),
+                  checkmarkColor: colors.accentCyan,
+                  side: BorderSide(
+                    color: flashConcurrency == i + 1
+                        ? colors.accentCyan
+                        : colors.borderDefault,
+                  ),
+                  labelStyle: TextStyle(
+                    color: flashConcurrency == i + 1
+                        ? colors.accentCyan
+                        : colors.textPrimary,
+                  ),
+                  label: Text(
+                    '${i + 1}${i == 1 ? ' (${tr('settings_flash_recommended')})' : ''}',
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              tr('settings_flash_concurrency_hint'),
+              style: TextStyle(color: colors.textSecondary, fontSize: 11),
+            ),
+            const SizedBox(height: 12),
             if (theme != null) ...[
               _buildHardwareProfileSection(context),
               const SizedBox(height: 12),
@@ -668,6 +764,129 @@ class _SettingsGlassTuningTab extends StatelessWidget {
                 onChanged: onMeshOrbOpacityChanged,
               ),
             ],
+            const SizedBox(height: 12),
+            Divider(color: colors.borderDefault, height: 1),
+            const SizedBox(height: 12),
+
+            // Idle Sleep Section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tr('idle_sleep_title'),
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        tr('idle_sleep_desc'),
+                        style: TextStyle(
+                          color: colors.textSecondary,
+                          fontSize: 10.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: enableIdleSleep,
+                  activeThumbColor: colors.accentCyan,
+                  onChanged: onIdleSleepToggled,
+                ),
+              ],
+            ),
+            if (enableIdleSleep) ...[
+              const SizedBox(height: 10),
+              Text(
+                tr('idle_timeout_label'),
+                style: TextStyle(
+                  color: colors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _buildIdleTimeoutChip(
+                    label: tr('idle_12s'),
+                    value: 12,
+                    currentValue: idleTimeoutSeconds,
+                    colors: colors,
+                    onSelect: () => onIdleTimeoutChanged(12),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildIdleTimeoutChip(
+                    label: tr('idle_30s'),
+                    value: 30,
+                    currentValue: idleTimeoutSeconds,
+                    colors: colors,
+                    onSelect: () => onIdleTimeoutChanged(30),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildIdleTimeoutChip(
+                    label: tr('idle_60s'),
+                    value: 60,
+                    currentValue: idleTimeoutSeconds,
+                    colors: colors,
+                    onSelect: () => onIdleTimeoutChanged(60),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIdleTimeoutChip({
+    required String label,
+    required int value,
+    required int currentValue,
+    required AppColors colors,
+    required VoidCallback onSelect,
+  }) {
+    final isSelected = value == currentValue;
+    return InkWell(
+      onTap: onSelect,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colors.accentCyan.withValues(alpha: 0.18)
+              : colors.headerBg.withValues(alpha: 0.35),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isSelected ? colors.accentCyan : colors.borderDefault,
+            width: isSelected ? 1.4 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.timer_outlined,
+              size: 13,
+              color: isSelected ? colors.accentCyan : colors.textSecondary,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? colors.accentCyan : colors.textPrimary,
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
           ],
         ),
       ),

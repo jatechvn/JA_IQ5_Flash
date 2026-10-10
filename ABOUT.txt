@@ -8,8 +8,8 @@ Engine       : Qualcomm EDL / fh_loader.exe / Sahara Protocol
 Managed By   : JA Auto Git
 Website      : https://jatechvn.github.io/
 ------------------------------------------------------------------------
-Version      : v1.3.2
-Release Date : 2026-10-03
+Version      : v1.4.0
+Release Date : 2026-10-10
 Author       : JATech VN
 License      : MIT
 Platform     : Windows 10 / 11 (x64)
@@ -24,9 +24,13 @@ Key Features :
   • Multi-Device Simultaneous EDL Flash (up to 8 COM ports)
   • Two-Column Layout: Dedicated EDL (9008) & ADB/Fastboot monitoring columns
   • Auto Flash Pipeline: Fastboot -> ADB -> EDL -> Flash -> Reboot
+  • AppPowerManager GPU/CPU Optimizer: Auto-stops heavy animations on window blur/minimize
+  • Direction Preservation: Seamless resume of MeshOrb and rotating glows in original direction
+  • Idle Sleep Mode (Ngủ Rảnh Tay): Auto-sleep after 12s/30s/60s inactivity, instant throttled wake
+  • Session Epoch Tokens: Prevents animation timer leaks across theme, slot, and tab transitions
   • 3 Smart Firmware Slots: Factory Stock, User Custom, Diag/Test with fast switch
   • Rotating Glow Border: Dynamic animated comet beam for selected slot card
-  • Asymmetric Bounce Marquee Path: Smooth ping-pong marquee for long paths
+  • Asymmetric Bounce Marquee Path: Smooth ping-pong marquee with offset freeze and restore
   • Hardware Tier Profiling: Ultra (120 FPS), Balanced (60 FPS), Lite (Zero-Lag)
   • Real-time Bento Glassmorphism: Live blur (0-40px) & opacity (5-100%) tuning with cancel rollback
   • LAN Over-The-Air (OTA) Updates: Automatic background checks, UNC/SMB share integration, and robocopy handoff

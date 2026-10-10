@@ -5,12 +5,74 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:ja_iq5_flash/modules/i18n.dart';
 import 'package:ja_iq5_flash/modules/logic/firmware_slot.dart';
+import 'package:ja_iq5_flash/modules/logic/operation_support.dart';
 import 'package:ja_iq5_flash/modules/ui/app_colors.dart';
 import 'package:ja_iq5_flash/modules/ui/glass_widgets.dart';
+import 'package:ja_iq5_flash/modules/services/app_power_manager.dart';
 import 'package:ja_iq5_flash/modules/ui/styles.dart';
 import 'package:ja_iq5_flash/modules/ui/settings_dialog.dart';
 
 void main() {
+  testWidgets(
+    'Flash concurrency changes only on Save and reaches config callback',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1200, 1400);
+      final original = DeviceOperationQueue.shared.maxConcurrent;
+      DeviceOperationQueue.shared.maxConcurrent = 2;
+      addTearDown(() {
+        tester.view.resetDevicePixelRatio();
+        tester.view.resetPhysicalSize();
+        DeviceOperationQueue.shared.maxConcurrent = original;
+      });
+      final theme = AppTheme();
+      int? saved;
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: theme,
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => showSettingsDialog(
+                  context: context,
+                  theme: theme,
+                  onConfigSaved: () =>
+                      saved = DeviceOperationQueue.shared.maxConcurrent,
+                ),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      for (final save in [false, true]) {
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        final two = find.byKey(const ValueKey('flash-concurrency-2'));
+        final four = find.byKey(const ValueKey('flash-concurrency-4'));
+        expect(tester.widget<ChoiceChip>(two).selected, isTrue);
+        for (var count = 1; count <= 8; count++) {
+          expect(
+            find.byKey(ValueKey('flash-concurrency-$count')),
+            findsOneWidget,
+          );
+        }
+        await tester.tap(four);
+        await tester.pumpAndSettle();
+        expect(tester.widget<ChoiceChip>(four).selected, isTrue);
+        expect(tester.widget<ChoiceChip>(two).selected, isFalse);
+        expect(DeviceOperationQueue.shared.maxConcurrent, 2);
+        await tester.tap(
+          find.text(tr(save ? 'action_save_settings' : 'action_close')),
+        );
+        await tester.pumpAndSettle();
+        expect(DeviceOperationQueue.shared.maxConcurrent, save ? 4 : 2);
+        expect(saved, save ? 4 : null);
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
   group('FirmwareSlotProfile Tests', () {
     test(
       'Initializes 3 slot types with proper badges, icons, and dynamic i18n',
@@ -715,6 +777,8 @@ void main() {
         expect(find.text(tr('perf_lite')), findsOneWidget);
 
         // Tap Lite mode
+        await tester.ensureVisible(find.text(tr('perf_lite')));
+        await tester.pumpAndSettle();
         await tester.tap(find.text(tr('perf_lite')));
         await tester.pumpAndSettle();
         expect(theme.perfMode, equals(PerfTierMode.lite));
@@ -722,6 +786,8 @@ void main() {
         expect(theme.enableMeshOrbs, isFalse);
 
         // Tap Balanced mode
+        await tester.ensureVisible(find.text(tr('perf_balanced')));
+        await tester.pumpAndSettle();
         await tester.tap(find.text(tr('perf_balanced')));
         await tester.pumpAndSettle();
         expect(theme.perfMode, equals(PerfTierMode.balanced));
@@ -985,6 +1051,94 @@ void main() {
       expect(theme.cardBlur, equals(28.0));
       expect(theme.cardOpacity, equals(0.45));
     });
+
+    testWidgets(
+      'SettingsDialog renders Idle Sleep controls and tests rollback and save',
+      (tester) async {
+        tester.view.devicePixelRatio = 1.0;
+        tester.view.physicalSize = const Size(1200, 1400);
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
+        final theme = AppTheme();
+        AppPowerManager.instance.setEnableIdleSleep(true);
+        AppPowerManager.instance.setIdleTimeout(const Duration(seconds: 12));
+
+        await tester.pumpWidget(
+          ChangeNotifierProvider.value(
+            value: theme,
+            child: MaterialApp(
+              home: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () {
+                    showSettingsDialog(context: context, theme: theme);
+                  },
+                  child: const Text('Open Settings'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Open Settings'));
+        await tester.pumpAndSettle();
+
+        // Scroll down to make Idle Sleep section visible
+        await tester.drag(
+          find.byType(SingleChildScrollView).first,
+          const Offset(0, -600),
+        );
+        await tester.pumpAndSettle();
+
+        // Verify Idle Sleep Title and Chips are present
+        expect(find.text(tr('idle_sleep_title')), findsOneWidget);
+        expect(find.text(tr('idle_12s')), findsOneWidget);
+        expect(find.text(tr('idle_30s')), findsOneWidget);
+        expect(find.text(tr('idle_60s')), findsOneWidget);
+
+        // Tap 30s chip
+        await tester.ensureVisible(find.text(tr('idle_30s')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(tr('idle_30s')));
+        await tester.pumpAndSettle();
+        expect(AppPowerManager.instance.idleTimeout.inSeconds, equals(30));
+
+        // Click Close to test rollback
+        final closeBtn = find.text(tr('action_close'));
+        await tester.tap(closeBtn);
+        await tester.pumpAndSettle();
+
+        // Reverted to 12s
+        expect(AppPowerManager.instance.idleTimeout.inSeconds, equals(12));
+
+        // Re-open, select 60s and Save
+        await tester.tap(find.text('Open Settings'));
+        await tester.pumpAndSettle();
+
+        await tester.drag(
+          find.byType(SingleChildScrollView).first,
+          const Offset(0, -600),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text(tr('idle_60s')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(tr('idle_60s')));
+        await tester.pumpAndSettle();
+
+        final saveBtn = find.text(tr('action_save_settings'));
+        await tester.tap(saveBtn);
+        await tester.pumpAndSettle();
+
+        expect(AppPowerManager.instance.idleTimeout.inSeconds, equals(60));
+
+        // Cleanup
+        AppPowerManager.instance.onWindowBlur();
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
   });
 
   group('Button & Header Label Cleanliness (No Duplicate Emojis)', () {

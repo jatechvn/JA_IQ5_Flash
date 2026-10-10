@@ -8,6 +8,7 @@ import 'package:win32/win32.dart';
 
 import 'modules/constants.dart';
 import 'modules/ja_license_checker.dart';
+import 'modules/services/app_power_manager.dart';
 import 'modules/utils.dart';
 import 'modules/ui/styles.dart';
 import 'modules/ui/main_window.dart';
@@ -71,6 +72,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    AppPowerManager.instance.onLifecycleStateChanged(state);
     if (state == AppLifecycleState.detached) {
       // Re-enable service when app exits
       startQualcommService();
@@ -119,6 +121,27 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           title: appName,
           debugShowCheckedModeBanner: false,
           theme: widget.theme.themeData,
+          builder: (context, child) {
+            return Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (_) =>
+                  AppPowerManager.instance.recordUserInteraction(),
+              onPointerMove: (_) =>
+                  AppPowerManager.instance.recordUserInteraction(),
+              onPointerHover: (_) =>
+                  AppPowerManager.instance.recordUserInteraction(),
+              onPointerSignal: (_) =>
+                  AppPowerManager.instance.recordUserInteraction(),
+              child: Focus(
+                autofocus: false,
+                onKeyEvent: (_, _) {
+                  AppPowerManager.instance.recordUserInteraction();
+                  return KeyEventResult.ignored;
+                },
+                child: child ?? const SizedBox.shrink(),
+              ),
+            );
+          },
           home: _isLicensed
               ? MainWindow(theme: widget.theme)
               : Scaffold(

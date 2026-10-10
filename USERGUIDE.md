@@ -1,4 +1,4 @@
-# 📘 Hướng dẫn Sử dụng - JA IQ5 Reflash v1.3.2
+# 📘 Hướng dẫn Sử dụng - JA IQ5 Reflash v1.4.0
 
 Ứng dụng desktop chuyên nghiệp hỗ trợ nạp firmware tự động cho nhiều thiết bị Qualcomm Snapdragon (EDL 9008) đồng thời trên nền tảng Windows 10 & 11 (x64).
 
@@ -18,13 +18,13 @@
 ## 1. Khởi động & Cài đặt
 
 ### Cách 1: Cài đặt chuẩn vào Windows (Khuyên dùng)
-1. Tải gói phát hành `JA_IQ5_Flash_v1.3.2_Windows_x64.zip`.
+1. Tải gói phát hành `JA_IQ5_Flash_v1.4.0_Windows_x64.zip`.
 2. Giải nén gói phát hành, nhấp đúp vào `install.bat` để chạy cài đặt tự động (không cần quyền Administrator).
 3. Ứng dụng sẽ được cài đặt vào `%LOCALAPPDATA%\Programs\JA_IQ5_Flash` với đầy đủ shortcut trên Desktop và Start Menu.
 4. Gỡ bỏ bất kỳ lúc nào qua `uninstall.bat` hoặc Control Panel / Windows Settings.
 
 ### Cách 2: Chạy trực tiếp bản Portable
-1. Tải gói phát hành `JA_IQ5_Flash_v1.3.2_Windows_x64.zip`.
+1. Tải gói phát hành `JA_IQ5_Flash_v1.4.0_Windows_x64.zip`.
 2. Giải nén toàn bộ nội dung gói vào thư mục làm việc (ví dụ: `D:\Tools\JA_IQ5_Flash\`).
 3. Nhấp đúp chuột vào `ja_iq5_flash.exe` để mở ứng dụng.
 4. *Lưu ý*: Ứng dụng tự động tạm dừng Qualcomm Service khi khởi động để bắt trọn gói Sahara 9008 và tự kích hoạt lại khi đóng ứng dụng.
@@ -105,6 +105,12 @@ Trong hộp thoại Cài đặt (Tab **Kính mờ**):
   - **Ultra (120 FPS)**: Đầy đủ hiệu ứng kính mờ 20px, hạt sáng nền chuyển động mượt mà cho PC cấu hình cao.
   - **Balanced (60 FPS)**: Hiệu ứng kính mờ 14px tối ưu pin và hiệu năng cho laptop văn phòng.
   - **Lite (Zero-Lag)**: Giao diện Acrylic trong suốt loại bỏ độ trễ, thích hợp cho máy cấu hình thấp hoặc máy ảo.
+- **Tối ưu Năng lượng & GPU (AppPowerManager)**:
+  - Tự động phát hiện khi cửa sổ Inactive hoặc Thu nhỏ (Minimized) để tạm dừng hoàn toàn các hoạt ảnh nặng (hạt sáng nền MeshOrb, viền sáng sao băng xoay quanh, chữ chạy cuộn).
+  - Tự động ghi nhớ hướng di chuyển và vị trí cuộn để tiếp tục chuyển động mượt mà ngay khi người dùng quay lại ứng dụng.
+- **Chế độ Ngủ Rảnh Tay (Idle Sleep Mode)**:
+  - Khi bật tính năng này, sau khoảng thời gian người dùng không tương tác (mặc định 12s, tùy chọn 30s hoặc 60s), ứng dụng sẽ tự động đưa các hiệu ứng động nền vào trạng thái ngủ để tiết kiệm tối đa điện năng và làm mát GPU/CPU máy trạm.
+  - Ngay khi người dùng di chuột hoặc gõ phím, ứng dụng lập tức bừng sáng trở lại mà không có độ trễ.
 - **Xem trước thời gian thực (Live Preview)**:
   - Kéo thanh trượt **Độ mờ kính (Blur)** và **Độ trong suốt (Opacity)** để xem trực tiếp thay đổi trên nền ứng dụng.
   - Nếu đóng hộp thoại mà không nhấn "Lưu cài đặt", hệ thống sẽ tự động **Rollback** về thông số ban đầu.

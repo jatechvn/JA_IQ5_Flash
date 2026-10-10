@@ -2,6 +2,36 @@
 
 All notable changes to **JA IQ5 Reflash** will be documented in this file.
 
+## [v1.4.0] - 2026-10-10
+
+### 🚀 Nâng cấp & Tính năng mới
+- **⚡ Quản lý Năng lượng & Tối ưu Hóa GPU Toàn diện (`AppPowerManager`):**
+  - Tích hợp `AppPowerManager` là Single Source of Truth duy nhất quản lý trạng thái hiển thị của ứng dụng: cửa sổ Active/Inactive (`windowActiveNotifier`), trạng thái người dùng thao tác (`userActiveNotifier`), và quyền phát hiệu ứng động (`animationsRunningNotifier`).
+  - Tự động dừng triệt để mọi animation chạy ngầm liên tục (`MeshOrb`, `RotatingGlowBorder`, `AsymmetricMarqueeText`) khi cửa sổ bị mất tiêu điểm (Inactive) hoặc thu nhỏ (Minimized), giải phóng 100% tài nguyên GPU/CPU trên các máy trạm sản xuất.
+  - **Bảo toàn Hướng Chuyển động (Direction Preservation):** `MeshOrb` tự động lưu giữ trạng thái chuyển động (tiến/lùi) trước khi tạm dừng và tiếp tục chuyển động đúng chiều một cách mượt mà khi kích hoạt lại, tránh giật hình hoặc đảo hướng bất thường.
+  - **Session Epoch Guard:** Cơ chế chu kỳ phiên độc quyền với mã token `_sessionEpoch` ngăn chặn hoàn toàn hiện tượng rò rỉ Timer/Marquee callback khi chuyển đổi nhanh giữa các Slot ROM hoặc thay đổi theme.
+  - **Đóng băng Tọa độ Marquee (Offset Freezing):** Giữ nguyên vị trí cuộn hiện tại của đường dẫn ROM dài khi tạm dừng và tiếp tục cuộn mượt mà không bị nhảy về vị trí đầu dòng.
+- **🌙 Chế độ Ngủ Rảnh Tay (Idle Sleep Mode):**
+  - Tự động tạm dừng toàn bộ hiệu ứng động nền khi ứng dụng đang mở nhưng người dùng không thao tác sau một khoảng thời gian định trước (mặc định 12s, tùy chọn 30s, 60s hoặc Tắt).
+  - Tích hợp bộ lắng nghe sự kiện thao tác chuột/phím tối ưu hóa (throttled pointer & key listener 250ms) giúp đánh thức tức thì giao diện ngay khi có tương tác mà không gây trễ giao diện.
+  - Tùy chỉnh trực tiếp trong hộp thoại Cài đặt (Tab Kính mờ) với công tắc bật/tắt, chip chọn thời gian, cơ chế hủy hoàn tác (Rollback) và tự động ghi nhớ vào `config.ini`.
+  - Hỗ trợ đầy đủ 3 ngôn ngữ: Tiếng Việt, English, 中文.
+- **🔒 Tối ưu Hóa Concurrency Lease & Cơ chế Khởi động Lại Thiết bị:**
+  - Áp dụng cơ chế Semaphore / Mutex Lease độc lập cho từng cổng COM trong `operation_support.dart`, `qfil_engine.dart`, và `reboot_worker.dart`.
+  - Ngăn ngừa hiện tượng race condition khi cắm rút thiết bị liên tục hoặc khi nhiều cổng cùng kích hoạt lệnh khởi động lại đồng thời.
+
+### 🐛 Sửa lỗi & Tối ưu hóa
+- **🪟 Sửa Lỗi Nhận diện Focus Win32 Native:**
+  - Khắc phục sự cố xử lý tin nhắn `WM_ACTIVATE` trong `windows/runner/win32_window.cpp` khi chuyển đổi giữa các cửa sổ ứng dụng Windows khác nhau, đảm bảo thông báo `WA_INACTIVE` được chuyển tiếp chính xác vào Flutter runtime.
+- **🧪 Mở rộng Bộ Kiểm thử Tự động:**
+  - Bổ sung 16 test cases chuyên sâu kiểm thử trọn vẹn luồng vòng đời `AppPowerManager`, khả năng phục hồi hướng di chuyển animation, và cơ chế Session Epoch Guard chống rò rỉ callback (`app_power_manager_test.dart`, `glass_animation_resume_test.dart`, `glass_marquee_session_test.dart`).
+  - Nâng tổng số test cases đạt 97/97 tests (100% xanh).
+
+### 📦 Phát hành
+- Đồng bộ phiên bản 1.4.0+6 trong `pubspec.yaml`, `constants.dart`, `Runner.rc`, `ABOUT.txt`, `install.bat`, `README.md`, `USERGUIDE.md`, `RELEASE_NOTES.md`.
+
+---
+
 ## [v1.3.2] - 2026-10-03
 
 ### 🚀 Nâng cấp & Tính năng mới

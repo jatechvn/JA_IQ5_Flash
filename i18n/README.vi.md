@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.3.2-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.4.0-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
@@ -145,6 +145,17 @@ File thực thi và file nén zip đóng gói sẽ được tạo tự động t
 
 Chi tiết lịch sử các phiên bản có tại [CHANGELOG.md](../CHANGELOG.md).
 
+- **v1.4.0 (10/10/2026)**:
+  - Tối ưu hóa toàn diện hiệu năng GPU/CPU với `AppPowerManager`: Tự động ngắt animation khi cửa sổ Inactive/Minimized.
+  - Bảo toàn hướng di chuyển animation (Direction Preservation) khi kích hoạt lại cửa sổ.
+  - Chế độ ngủ rảnh tay (Idle Sleep Mode) tự động sau 12s/30s/60s không tương tác, đánh thức tức thì với bộ lọc 250ms.
+  - Cơ chế Session Epoch Tokens chống rò rỉ callback và đóng băng tọa độ Marquee mượt mà.
+  - Tối ưu hóa Concurrency Lease cho từng cổng COM và sửa lỗi focus Win32 native `WA_INACTIVE`.
+  - Đạt 97/97 bài kiểm thử tự động (100% xanh).
+- **v1.3.2 (03/10/2026)**:
+  - Chuẩn hóa tiêu đề cửa sổ hiển thị tên app "JA IQ5 Reflash" trên Windows 10/11.
+  - Đồng bộ metadata Windows PE (`Runner.rc`) cho Task Manager và Properties.
+  - Logo thương hiệu chính thức cho file thực thi, shortcut, taskbar và about dialog.
 - **v1.3.0 (21/09/2026)**:
   - Tích hợp toàn diện cơ chế cập nhật tự động qua mạng LAN OTA (`OtaUpdateService` + `update_config.json`).
   - Hộp thoại cập nhật Bento Frosted Glass hiện đại (`GlassUpdateDialog`) với chi tiết phiên bản, ghi chú phát hành và tiến độ %.

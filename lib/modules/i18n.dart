@@ -22,6 +22,23 @@ String tr(String key, [List<dynamic>? args]) {
 }
 
 const Map<String, Map<String, String>> _strings = {
+  'settings_flash_concurrency': {
+    'VI': 'Số thiết bị flash đồng thời',
+    'EN': 'Concurrent flash devices',
+    'CN': '同时刷写设备数量',
+  },
+  'settings_flash_recommended': {
+    'VI': 'Khuyến nghị',
+    'EN': 'Recommended',
+    'CN': '推荐',
+  },
+  'settings_flash_concurrency_hint': {
+    'VI':
+        'Mặc định 2. Thiết bị vượt giới hạn sẽ chờ. Giảm giới hạn không ngắt phiên đang chạy. Flash và reboot EDL dùng chung giới hạn.',
+    'EN':
+        'Default: 2. Extra devices wait. Lowering the limit does not stop active sessions. Flash and EDL reboot share this limit.',
+    'CN': '默认2台，超出数量的设备将等待。降低限制不会中断正在运行的任务。刷写和EDL重启共用此限制。',
+  },
   // Firmware bar
   'firmware_label': {'EN': 'FIRMWARE:', 'VI': 'FIRMWARE:', 'CN': '固件:'},
   'change_btn': {'EN': 'Browse', 'VI': 'Duyệt thư mục', 'CN': '浏览'},
@@ -886,6 +903,31 @@ const Map<String, Map<String, String>> _strings = {
     'VI': 'Độ sáng dạ quang Orbs',
     'CN': '光球发光亮度',
   },
+  'idle_sleep_title': {
+    'EN': 'Idle Power Saving (Sleep Mode)',
+    'VI': 'Tiết kiệm GPU khi rảnh tay (Sleep Mode)',
+    'CN': '空闲休眠节电模式 (Sleep Mode)',
+  },
+  'idle_sleep_desc': {
+    'EN':
+        'Pauses background MeshOrb animation when no mouse/keyboard activity is detected to minimize GPU usage.',
+    'VI':
+        'Tự động tạm dừng hiệu ứng nền MeshOrb khi không có thao tác chuột/bàn phím để đưa GPU về mức tối thiểu.',
+    'CN': '无键鼠操作时自动暂停背景光斑动画，将 GPU 占用降至最低。',
+  },
+  'idle_sleep_enable': {
+    'EN': 'Enable Idle Sleep',
+    'VI': 'Bật chế độ ngủ rảnh tay',
+    'CN': '启用空闲休眠',
+  },
+  'idle_timeout_label': {
+    'EN': 'Idle Timeout',
+    'VI': 'Thời gian chờ rảnh tay',
+    'CN': '休眠等待时间',
+  },
+  'idle_12s': {'EN': '12s (Default)', 'VI': '12s (Mặc định)', 'CN': '12秒 (默认)'},
+  'idle_30s': {'EN': '30s', 'VI': '30 giây', 'CN': '30秒'},
+  'idle_60s': {'EN': '60s', 'VI': '60 giây', 'CN': '60秒'},
   'guide_flash_title': {
     'EN': '1. Qualcomm EDL 9008 Flash Process',
     'VI': '1. Quy trình Nạp Firmware (EDL 9008)',

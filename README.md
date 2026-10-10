@@ -7,7 +7,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?logo=windows&logoColor=white)](https://microsoft.com)
-[![Release](https://img.shields.io/badge/Release-v1.3.2-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
+[![Release](https://img.shields.io/badge/Release-v1.4.0-00C853?logo=github)](https://github.com/jatechvn/JA_IQ5_Flash/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 <p align="center">
@@ -223,6 +223,15 @@ mesh_orb_opacity = 0.24
 
 See full release history and notes in [CHANGELOG.md](CHANGELOG.md).
 
+- **v1.4.0 (2026-10-10)**:
+  - AppPowerManager: Single Source of Truth GPU/CPU power management stopping heavy continuous animations on window blur/minimize.
+  - Direction Preservation: MeshOrb floating direction vector preserved across pause and resume cycles.
+  - Idle Sleep Mode (Ngủ Rảnh Tay): Auto-pause animations after 12s/30s/60s inactivity with instant 250ms throttled wakeup.
+  - Session Epoch Tokens: Prevents animation timer and marquee callback leaks during slot or theme changes.
+  - Marquee Offset Freezing: Retains precise text scroll positions while paused.
+  - Concurrency Lease: Per-port mutex leases eliminating device reconnect and reboot race conditions.
+  - Fixed Win32 native focus handling for `WA_INACTIVE` in `win32_window.cpp`.
+  - 97 passing automated unit and widget tests (100% green).
 - **v1.3.2 (2026-10-03)**:
   - Synchronized window title to full App Name "JA IQ5 Reflash" across Windows 10/11.
   - Windows PE metadata normalization in `Runner.rc` (`FileDescription`, `ProductName`, `InternalName`).

@@ -84,7 +84,7 @@ Set-Content -LiteralPath (Join-Path $output 'SHA256SUMS.txt') -Value "$hash *$pa
 
 # OTA update metadata
 $notesPath = Join-Path $root 'RELEASE_NOTES.md'
-$notes = if (Test-Path -LiteralPath $notesPath) { (Get-Content -LiteralPath $notesPath -Raw).Trim() } else { '' }
+$notes = if (Test-Path -LiteralPath $notesPath) { [IO.File]::ReadAllText($notesPath).Trim() } else { '' }
 [ordered]@{
     version = $expected
     fileName = "$packageName.zip"

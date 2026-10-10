@@ -2,18 +2,51 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-/// FIFO serialization also protects the machine-wide Qualcomm service.
+/// Bounded concurrency; operations on the same port stay FIFO.
 class DeviceOperationQueue {
-  static final shared = DeviceOperationQueue();
-  Future<void> _tail = Future.value();
+  static final shared = DeviceOperationQueue(maxConcurrent: 2);
+  DeviceOperationQueue({int maxConcurrent = 8})
+    : _maxConcurrent = maxConcurrent.clamp(1, 8);
+  int _maxConcurrent;
+  final _pending = <({String port, void Function() start})>[];
+  final _activePorts = <String>{};
 
-  Future<T> run<T>(Future<T> Function() operation) {
-    final result = _tail.then((_) => operation());
-    _tail = result.then<void>(
-      (_) {},
-      onError: (Object error, StackTrace stack) {},
-    );
-    return result;
+  int get maxConcurrent => _maxConcurrent;
+  set maxConcurrent(int value) {
+    _maxConcurrent = value.clamp(1, 8);
+    _drain();
+  }
+
+  Future<T> run<T>(Future<T> Function() operation, {String port = 'default'}) {
+    final result = Completer<T>();
+    final key = port.toUpperCase();
+    _pending.add((
+      port: key,
+      start: () async {
+        try {
+          result.complete(await operation());
+        } catch (error, stack) {
+          result.completeError(error, stack);
+        } finally {
+          _activePorts.remove(key);
+          _drain();
+        }
+      },
+    ));
+    _drain();
+    return result.future;
+  }
+
+  void _drain() {
+    while (_activePorts.length < _maxConcurrent) {
+      final index = _pending.indexWhere(
+        (job) => !_activePorts.contains(job.port),
+      );
+      if (index < 0) return;
+      final job = _pending.removeAt(index);
+      _activePorts.add(job.port);
+      job.start();
+    }
   }
 }
 
@@ -142,51 +175,83 @@ Future<ProcessResult> runDeviceCommand(
   return ProcessResult(0, code, out.toString(), err.toString());
 }
 
-/// Called inside the shared queue; restore only a service that was running.
-Future<T> withQualcommService<T>(
-  Future<T> Function() action, {
-  Future<ProcessResult> Function(String, List<String>) commandRunner =
-      runDeviceCommand,
-}) async {
-  if (!Platform.isWindows) return action();
-  final query = await commandRunner('sc.exe', ['query', 'qcmtusvc']);
-  if (query.exitCode == 1060) return action(); // Service not installed.
-  if (query.exitCode != 0) {
-    throw StateError('Cannot query qcmtusvc: ${query.stderr}');
+/// Reference-counted service lease shared by all flash and reboot operations.
+class QualcommServiceCoordinator {
+  QualcommServiceCoordinator({this.commandRunner = runDeviceCommand});
+  static final shared = QualcommServiceCoordinator();
+  final Future<ProcessResult> Function(String, List<String>) commandRunner;
+  final _transitions = DeviceOperationQueue();
+  int _users = 0;
+  bool _restore = false;
+
+  Future<T> run<T>(Future<T> Function() action) async {
+    if (!Platform.isWindows) return action();
+    await _transitions.run(() async {
+      if (_users == 0) await _prepare();
+      _users++;
+    });
+    try {
+      return await action();
+    } finally {
+      await _transitions.run(() async {
+        _users--;
+        if (_users == 0 && _restore) await _start();
+      });
+    }
   }
-  final wasRunning = RegExp(
-    r'STATE\s*:\s*4\b',
-  ).hasMatch(query.stdout.toString());
-  final wasStopped = RegExp(
-    r'STATE\s*:\s*1\b',
-  ).hasMatch(query.stdout.toString());
-  if (!wasRunning && !wasStopped) {
-    throw StateError('qcmtusvc is changing state; retry later');
+
+  Future<void> _start() async {
+    final result = await commandRunner('sc.exe', ['start', 'qcmtusvc']);
+    if (result.exitCode != 0 && result.exitCode != 1056) {
+      throw StateError('Cannot restore qcmtusvc: ${result.stdout}');
+    }
+    _restore = false;
   }
-  try {
-    if (wasRunning) {
+
+  Future<void> _prepare() async {
+    // Retry a failed restoration before capturing the next original state.
+    if (_restore) await _start();
+    final query = await commandRunner('sc.exe', ['query', 'qcmtusvc']);
+    if (query.exitCode == 1060) return;
+    if (query.exitCode != 0) {
+      throw StateError('Cannot query qcmtusvc: ${query.stderr}');
+    }
+    final running = RegExp(
+      r'STATE\s*:\s*4\b',
+    ).hasMatch(query.stdout.toString());
+    final stopped = RegExp(
+      r'STATE\s*:\s*1\b',
+    ).hasMatch(query.stdout.toString());
+    if (!running && !stopped) {
+      throw StateError('qcmtusvc is changing state; retry later');
+    }
+    if (!running) return;
+    _restore = true;
+    try {
       final stop = await commandRunner('sc.exe', ['stop', 'qcmtusvc']);
       if (stop.exitCode != 0) {
         throw StateError('Cannot stop qcmtusvc: ${stop.stdout}');
       }
-      var stopped = false;
       for (var i = 0; i < 20; i++) {
         final state = await commandRunner('sc.exe', ['query', 'qcmtusvc']);
         if (RegExp(r'STATE\s*:\s*1\b').hasMatch(state.stdout.toString())) {
-          stopped = true;
-          break;
+          return;
         }
         await Future<void>.delayed(const Duration(milliseconds: 250));
       }
-      if (!stopped) throw TimeoutException('qcmtusvc did not stop');
-    }
-    return await action();
-  } finally {
-    if (wasRunning) {
-      final result = await commandRunner('sc.exe', ['start', 'qcmtusvc']);
-      if (result.exitCode != 0 && result.exitCode != 1056) {
-        throw StateError('Cannot restore qcmtusvc: ${result.stdout}');
-      }
+      throw TimeoutException('qcmtusvc did not stop');
+    } catch (_) {
+      await _start();
+      rethrow;
     }
   }
 }
+
+Future<T> withQualcommService<T>(
+  Future<T> Function() action, {
+  Future<ProcessResult> Function(String, List<String>)? commandRunner,
+}) =>
+    (commandRunner == null
+            ? QualcommServiceCoordinator.shared
+            : QualcommServiceCoordinator(commandRunner: commandRunner))
+        .run(action);

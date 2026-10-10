@@ -17,6 +17,7 @@ import '../logic/operation_support.dart';
 import '../logic/firmware_slot.dart';
 import '../logic/reboot_worker.dart';
 import '../logic/fastboot_to_edl_worker.dart';
+import '../services/app_power_manager.dart';
 import 'styles.dart';
 import 'app_colors.dart';
 import 'dialogs.dart';
@@ -209,6 +210,9 @@ class _MainWindowState extends State<MainWindow> {
       if (configFile.existsSync()) {
         final content = configFile.readAsStringSync();
         final config = IniConfig()..load(content);
+        DeviceOperationQueue.shared.maxConcurrent =
+            int.tryParse(config.get('FLASH', 'max_concurrent_devices', '2')) ??
+            2;
 
         // Active slot
         _activeFwSlot =
@@ -263,6 +267,15 @@ class _MainWindowState extends State<MainWindow> {
         final orbOpacity =
             double.tryParse(config.get('GLASS', 'mesh_orb_opacity', '0.24')) ??
             0.24;
+        final enableIdleSleep =
+            config.get('GLASS', 'enable_idle_sleep', 'true') == 'true';
+        final idleTimeoutSeconds =
+            int.tryParse(config.get('GLASS', 'idle_timeout_seconds', '12')) ??
+            12;
+        AppPowerManager.instance.setEnableIdleSleep(enableIdleSleep);
+        AppPowerManager.instance.setIdleTimeout(
+          Duration(seconds: idleTimeoutSeconds),
+        );
         widget.theme.setLiveGlassmorphism(
           cardBlur: cardBlur,
           cardOpacity: cardOpacity,
@@ -289,6 +302,11 @@ class _MainWindowState extends State<MainWindow> {
       config.set('APP', 'language', getLang());
       config.set('APP', 'theme', widget.theme.isDark ? 'dark' : 'light');
       config.set('APP', 'compact', 'false');
+      config.set(
+        'FLASH',
+        'max_concurrent_devices',
+        DeviceOperationQueue.shared.maxConcurrent.toString(),
+      );
 
       // Glassmorphism & Hardware Tier preferences
       config.set('GLASS', 'perf_mode', widget.theme.perfMode.id);
@@ -321,6 +339,16 @@ class _MainWindowState extends State<MainWindow> {
         'GLASS',
         'mesh_orb_opacity',
         widget.theme.meshOrbOpacity.toStringAsFixed(2),
+      );
+      config.set(
+        'GLASS',
+        'enable_idle_sleep',
+        AppPowerManager.instance.enableIdleSleep.toString(),
+      );
+      config.set(
+        'GLASS',
+        'idle_timeout_seconds',
+        AppPowerManager.instance.idleTimeout.inSeconds.toString(),
       );
 
       config.set('PATHS', 'active_fw_slot', _activeFwSlot.toString());

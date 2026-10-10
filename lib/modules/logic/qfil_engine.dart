@@ -72,7 +72,7 @@ class QfilEngine {
       } catch (error) {
         return _fail('Flash failed: $error', onLog, onDone);
       }
-    });
+    }, port: port.toUpperCase());
   }
 
   Future<bool> _run({
